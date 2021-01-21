@@ -30,7 +30,7 @@ def ranking_today():
 
         url_flake = ""
         for li in soup.find(class_="list_ccc").find_all("li"):
-            if (today in li.text) & ("患者の発生" in li.text) & (not "愛知県職員における" in li.text):
+            if (today in li.text) & ("患者の発生" in li.text) & ("愛知県職員における" not in li.text):
                 url_flake = li.find("a")["href"]
         if url_flake != "":
             today_url = urljoin(multi_dirname(press_url, 3), url_flake)
@@ -80,7 +80,7 @@ def ranking_today():
                     else:
                         rank += 1
                     ranking_text += f"\n{rank}位 {num}人: {city}"
-                num_prior = num*1
+                num_prior = num * 1
             # print(ranking_text)
 
             post(ranking_text)
@@ -115,7 +115,7 @@ def ranking_week():
                 else:
                     rank += 1
                     ranking_text += f"\n{rank}位 {num}人: {city}"
-            num_prior = num*1
+            num_prior = num * 1
         # print(ranking_text, parse_tweet(ranking_text).weightedLength)
         post(ranking_text)
         # print(header)
@@ -125,7 +125,7 @@ def ranking_week():
 
 def ranking_week_area():
     pops = pandas.read_pickle("population.zip")
-    pdf_name = str(datetime.today()).split()[0].replace("-", "") + ".pdf"
+    # pdf_name = str(datetime.today()).split()[0].replace("-", "") + ".pdf"
     this_mo = pandas.read_pickle("database.zip")
 
     # this_mo = pandas.read_pickle(f"{os.path.splitext(pdf_name)[0]}.zip")
@@ -140,7 +140,7 @@ def ranking_week_area():
     pd_week = pd_week[~pd_week[0].str.contains("東京都|県|京都府|大阪府|北海道")]
     # pd_week = pd_week[(pd_week[0] != "三重県") & (pd_week[0] != "岐阜県") & (pd_week[0] != "千葉県")]
     pd_week = pd_week[pd_week[0] != ""]
-    pd_week["per_capita"] = [int(num/pops.loc[city, "20201001"]*10**5)
+    pd_week["per_capita"] = [int(num / pops.loc[city, "20201001"] * 10**5)
                              for city, num in zip(pd_week[0], pd_week[1])]
     pd_week = pd_week.sort_values("per_capita", ascending=False)
 
@@ -161,7 +161,7 @@ def ranking_week_area():
             else:
                 rank += 1
                 ranking_text += f"\n{rank}位 {num}人: {city}"
-        num_prior = num*1
+        num_prior = num * 1
     # print(ranking_text)
     post(ranking_text)
 

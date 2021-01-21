@@ -7,7 +7,7 @@ import feedparser
 import time
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import urljoin
 from twitter_post import post
 import re
 import PyPDF2
@@ -156,7 +156,7 @@ def post_okazaki():
         youbi = get_day_of_week_jp(today)
         if not os.path.isfile("okazaki_lock.zip"):
             header = f'[速報]岡崎市の本日の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)でした。詳細は公式サイトを参照 > {article_url}'
-        elif (num_today_ex := int(pandas.read_pickle("okazaki_lock.zip").loc["岡崎市", "本日"])) < num_today:
+        elif int(pandas.read_pickle("okazaki_lock.zip").loc["岡崎市", "本日"]) < num_today:
             header = f'[更新]岡崎市の本日の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)に更新されました。詳細は公式サイトを参照 > {article_url}'
         else:
             header = None
@@ -239,7 +239,7 @@ def post_toyota():
 
         if not os.path.isfile("toyota_lock.zip"):
             header = f'[速報]豊田市の本日の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)でした。詳細は公式サイトを参照 > {article_url}'
-        elif (num_today_ex := int(pandas.read_pickle("toyota_lock.zip").loc["豊田市", "本日"])) < num_today:
+        elif int(pandas.read_pickle("toyota_lock.zip").loc["豊田市", "本日"]) < num_today:
             header = f'[更新]豊田市の本日の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)に更新されました。詳細は公式サイトを参照 > {article_url}'
         else:
             header = None

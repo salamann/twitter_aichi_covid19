@@ -1,11 +1,5 @@
-import requests
-from bs4 import BeautifulSoup
-import difflib
 from datetime import datetime
-import time
 import aichi
-import os
-import ranking
 
 
 aichi.post_nagoya()
