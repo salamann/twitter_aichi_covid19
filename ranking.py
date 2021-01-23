@@ -10,6 +10,7 @@ from urllib.request import urlretrieve
 from twitter_post import post
 import aichi
 from twitter_text import parse_tweet
+from rt import rt_main
 
 
 def multi_dirname(path, n):
@@ -235,3 +236,4 @@ if __name__ == "__main__":
     update_database()
     ranking_week()
     ranking_week_area()
+    rt_main()
