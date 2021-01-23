@@ -34,7 +34,7 @@ def generate_rt(city, df):
     return rts
 
 
-def rt_main():
+def generate_rt_image_and_message():
     df = pandas.read_pickle("database.zip")
     large_cities = Counter(df["住居地"]).most_common()[:5]
 
@@ -66,4 +66,14 @@ def rt_main():
         message += f"{city}は{round(rt, 2)}、"
     message = message[:-1]
     message += f"でした。グラフは実効再生産数の推移を表しています({datetime.today().date()}現在)。"
+    return file_name, message
+
+
+def rt_post():
+    file_name, message = generate_rt_image_and_message()
     image_post(file_name, message)
+
+
+if __name__ == "__main__":
+    # generate_rt_image_and_message()
+    pass
