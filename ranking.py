@@ -7,10 +7,11 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from urllib.request import urlretrieve
-from twitter_post import post
+from twitter_post import post, image_post
 import aichi
 from twitter_text import parse_tweet
 from rt import rt_post
+from area_risk import image_file_name, generate_risk_map
 
 
 def multi_dirname(path, n):
@@ -164,46 +165,9 @@ def ranking_week_area():
                 ranking_text += f"\n{rank}位 {num}人: {city}"
         num_prior = num * 1
     # print(ranking_text)
-    post(ranking_text)
-
-    # load_url = 'https://www.pref.aichi.jp/site/covid19-aichi'
-    # html = requests.get(load_url)
-    # soup = BeautifulSoup(html.content, "html.parser")
-    # [nspan] = [num for num, _ in enumerate(
-    #     soup.find_all("span")) if "愛知県内の発生事例" in _.text]
-    # pdf_url = soup.find_all("span")[nspan+1].find("a")["href"]
-    # pdf_url = urljoin(os.path.dirname(os.path.dirname(load_url)), pdf_url)
-    # pdf_name = str(datetime.today()).split()[0].replace("-", "") + ".pdf"
-    # urlretrieve(pdf_url, pdf_name)
-
-    # aichi.generate_df_from_aichi(pdf_name)
-    # this_mo = pandas.read_pickle(f"{os.path.splitext(pdf_name)[0]}.zip")
-    # this_week = this_mo[this_mo["発表日"] >=
-    #                     datetime.today() - timedelta(days=8)]
-    # pd_week = pandas.DataFrame(
-    #     collections.Counter(this_week["住居地"]).most_common())
-    # pd_week[0] = [_.replace("⻄", "西") for _ in pd_week[0]]
-
-    # ranking_text = "昨日まで直近1週間の新型コロナウイルス感染者数ランキング\n"
-    # rank = 0
-    # num_prior = 0
-    # for city, num in zip(pd_week[0], pd_week[1]):
-    #     if num == num_prior:
-    #         if parse_tweet(ranking_text).weightedLength > 265:
-    #             ranking_text += "(以下略)"
-    #             break
-    #         else:
-    #             ranking_text += f", {city}"
-    #     else:
-    #         if parse_tweet(ranking_text).weightedLength > 260:
-    #             ranking_text += "(以下略)"
-    #             break
-    #         else:
-    #             rank += 1
-    #             ranking_text += f"\n{rank}位 {num}人: {city}"
-    #     num_prior = num*1
-    # print(ranking_text)
-    # # post(ranking_text)
+    generate_risk_map()
+    # post(ranking_text)
+    image_post(image_file_name, ranking_text)
 
 
 def update_database():

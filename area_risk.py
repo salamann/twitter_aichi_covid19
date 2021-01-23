@@ -7,6 +7,9 @@ import os
 from datetime import datetime, timedelta
 matplotlib.rc('font', family='Noto Sans CJK JP')
 
+image_file_name = "risk_map_" + str(datetime.today().date()
+                                    ).replace(":", "") + ".png"
+
 
 def generate_risk_map():
     database = pandas.read_pickle("database.zip")
@@ -31,8 +34,7 @@ def generate_risk_map():
     plt.gca().spines['left'].set_visible(False)
     plt.gca().spines['bottom'].set_visible(False)
     # plt.suptitle("昨日まで直近1週間の10万人あたり新型コロナウイルス感染者数")
-    plt.savefig("risk_map_" + str(datetime.today().date()
-                                  ).replace(":", "") + ".png")
+    plt.savefig(image_file_name)
     # plt.gca().yaxis.set_label_position("right")
 
 
