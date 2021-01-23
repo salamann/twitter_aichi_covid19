@@ -6,7 +6,7 @@ import matplotlib
 from twitter_post import image_post
 
 
-def generate_rt(city):
+def generate_rt(city, df):
     nums = {"days": [], city: []}
     for days_before in range(1, 41):
         cond = (datetime.today() - timedelta(days=days_before + 8) < df["発表日"])
@@ -40,10 +40,10 @@ def rt_main():
 
     for num, [city, _] in enumerate(large_cities):
         if num == 0:
-            rts = generate_rt(city)
+            rts = generate_rt(city, df)
         else:
-            rts.update(generate_rt(city))
-    rts.update(generate_rt("愛知県全体"))
+            rts.update(generate_rt(city, df))
+    rts.update(generate_rt("愛知県全体", df))
 
     nagoya = pandas.DataFrame(rts).sort_values("days").set_index("days")
     plt.rcParams['figure.subplot.bottom'] = 0.18
