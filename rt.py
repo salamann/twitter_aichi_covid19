@@ -56,7 +56,9 @@ def generate_rt_image_and_message():
     plt.legend()
     plt.ylabel("Rt")
     plt.xticks(rotation=45)
-    plt.suptitle("愛知県の実効再生産数(Rt)の推移(主要市および県全体)")
+    plt.suptitle(
+        f"""愛知県の実効再生産数(Rt)の推移
+(主要市および県全体, {str(datetime.today().date())}現在)""", )
     file_name = "rt" + str(datetime.today().date()).replace(":", "") + ".png"
     plt.savefig(file_name, facecolor="w", dpi=150)
 
@@ -76,4 +78,5 @@ def rt_post():
 
 if __name__ == "__main__":
     # generate_rt_image_and_message()
+    rt_post()
     pass

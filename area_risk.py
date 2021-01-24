@@ -22,7 +22,7 @@ def generate_risk_map():
     database[database['発表日'] > datetime.today() - timedelta(days=8)]
     df2["covid_number"] = [collections.Counter(database[database['発表日'] > datetime.today(
     ) - timedelta(days=8)]["住居地"])[city] for city in df2["city"]]
-    df2["covid_number_per_capita"] = [None if city == "所属未定地" else 100000*cnum /
+    df2["covid_number_per_capita"] = [None if city == "所属未定地" else 100000 * cnum /
                                       populations.loc[city, "20201001"] for cnum, city in zip(df2["covid_number"], df2["city"])]
 
     df2.plot(column="covid_number_per_capita", legend=True,
@@ -33,8 +33,11 @@ def generate_risk_map():
     plt.gca().spines['top'].set_visible(False)
     plt.gca().spines['left'].set_visible(False)
     plt.gca().spines['bottom'].set_visible(False)
-    # plt.suptitle("昨日まで直近1週間の10万人あたり新型コロナウイルス感染者数")
+    plt.suptitle(f"""昨日まで直近1週間の10万人あたり新型コロナウイルス感染者数
+({str(datetime.today().date())}現在)"""
+                 )
     plt.savefig(image_file_name)
+    plt.close()
     # plt.gca().yaxis.set_label_position("right")
 
 
