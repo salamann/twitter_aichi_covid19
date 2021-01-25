@@ -36,6 +36,16 @@ def generate_risk_map():
     plt.suptitle(f"""昨日まで直近1週間の10万人あたり新型コロナウイルス感染者数
 ({str(datetime.today().date())}現在)"""
                  )
+    plt.text(plt.gca().get_xlim()[0] - 0.2,
+             plt.gca().get_ylim()[0] - 0.15,
+             """@AichiCovid19
+             
+データ元
+感染者数：愛知県新型コロナウイルス感染症対策サイト(https://www.pref.aichi.jp/site/covid19-aichi/)
+人口：愛知県の人口　愛知県人口動向調査結果(https://www.pref.aichi.jp/soshiki/toukei/jinko1new.html)
+地図：国土交通省 国土数値情報 (https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-v2_4.html#prefecture23)
+""",
+             fontsize=7)
     plt.savefig(image_file_name)
     plt.close()
     # plt.gca().yaxis.set_label_position("right")

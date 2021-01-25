@@ -127,12 +127,7 @@ def ranking_week():
 
 def ranking_week_area():
     pops = pandas.read_pickle("population.zip")
-    # pdf_name = str(datetime.today()).split()[0].replace("-", "") + ".pdf"
     this_mo = pandas.read_pickle("database.zip")
-
-    # this_mo = pandas.read_pickle(f"{os.path.splitext(pdf_name)[0]}.zip")
-
-    # this_mo = pandas.read_pickle("20201213.zip")
 
     this_week = this_mo[this_mo["発表日"] >= datetime.today() - timedelta(days=8)]
     pd_week = pandas.DataFrame(

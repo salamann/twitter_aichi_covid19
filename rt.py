@@ -55,12 +55,24 @@ def generate_rt_image_and_message():
     plt.grid()
     plt.legend()
     plt.ylabel("Rt")
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=30)
     plt.suptitle(
         f"""愛知県の実効再生産数(Rt)の推移
 (主要市および県全体, {str(datetime.today().date())}現在)""", )
     file_name = "rt" + str(datetime.today().date()).replace(":", "") + ".png"
+
+    plt.text(plt.gca().get_xlim()[0] - 2,
+             plt.gca().get_ylim()[0] - 0.45,
+             """@AichiCovid19
+
+データ元
+感染者数：愛知県新型コロナウイルス感染症対策サイト(https://www.pref.aichi.jp/site/covid19-aichi/)
+実効再生産数の計算方法：Real-time estimation of the effective reproduction number of COVID-19 in Japan (https://github.com/contactmodel/COVID19-Japan-Reff)
+平均世代時間は5日、報告間隔は7日と仮定
+""",
+             fontsize=5)
     plt.savefig(file_name, facecolor="w", dpi=150)
+    plt.close()
 
     message = "[更新]昨日の愛知県内の実効再生産数(Rt)は、"
     dfyesterday = nagoya.loc[nagoya.index[-1], :]
@@ -77,6 +89,6 @@ def rt_post():
 
 
 if __name__ == "__main__":
-    # generate_rt_image_and_message()
-    rt_post()
+    generate_rt_image_and_message()
+    # rt_post()
     pass
