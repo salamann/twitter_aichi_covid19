@@ -105,7 +105,7 @@ def ranking_week():
         num_prior = 0
         for city, num in zip(pd_week[0], pd_week[1]):
             if num == num_prior:
-                if parse_tweet(ranking_text).weightedLength > 262:
+                if parse_tweet(ranking_text).weightedLength > 258:
                     ranking_text += "(以下略)"
                     break
                 else:
@@ -133,7 +133,7 @@ def ranking_week_area():
     pd_week = pandas.DataFrame(
         collections.Counter(this_week["住居地"]).most_common())
     pd_week[0] = [_.replace("⻄", "西").replace(
-        '瀬⼾市', "瀬戸市").replace('⻑久⼿市', "長久手市") for _ in pd_week[0]]
+        '瀬⼾市', "瀬戸市").replace('⻑久⼿市', "長久手市").replace('⾧久手市', '長久手市') for _ in pd_week[0]]
     pd_week = pd_week[~pd_week[0].str.contains("東京都|県|京都府|大阪府|北海道")]
     # pd_week = pd_week[(pd_week[0] != "三重県") & (pd_week[0] != "岐阜県") & (pd_week[0] != "千葉県")]
     pd_week = pd_week[pd_week[0] != ""]
@@ -146,13 +146,13 @@ def ranking_week_area():
     num_prior = 0
     for city, num in zip(pd_week[0], pd_week["per_capita"]):
         if num == num_prior:
-            if parse_tweet(ranking_text).weightedLength > 262:
+            if parse_tweet(ranking_text).weightedLength > 258:
                 ranking_text += "(以下略)"
                 break
             else:
                 ranking_text += f", {city}"
         else:
-            if parse_tweet(ranking_text).weightedLength > 253:
+            if parse_tweet(ranking_text).weightedLength > 252:
                 ranking_text += "(以下略)"
                 break
             else:
