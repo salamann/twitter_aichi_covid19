@@ -7,8 +7,8 @@ import os
 from datetime import datetime, timedelta
 matplotlib.rc('font', family='Noto Sans CJK JP')
 
-image_file_name = "risk_map_" + str(datetime.today().date()
-                                    ).replace(":", "") + ".png"
+image_file_name = os.path.join("data", "risk_map_" + str(datetime.today().date()
+                                                         ).replace(":", "") + ".png")
 
 
 def generate_risk_map():
@@ -46,7 +46,7 @@ def generate_risk_map():
 地図：国土交通省 国土数値情報 (https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-v2_4.html#prefecture23)
 """,
              fontsize=7)
-    plt.savefig(image_file_name)
+    plt.savefig(image_file_name, dpi=200)
     plt.close()
     # plt.gca().yaxis.set_label_position("right")
 

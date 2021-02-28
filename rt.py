@@ -3,6 +3,7 @@ from collections import Counter
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import matplotlib
+import os
 from twitter_post import image_post
 
 
@@ -49,7 +50,8 @@ def generate_rt_image_and_message():
     plt.rcParams['figure.subplot.bottom'] = 0.18
     matplotlib.rc('font', family='Noto Sans CJK JP')
     for city in nagoya.keys():
-        plt.plot(nagoya.index, nagoya[city], label=city)
+        plt.plot(nagoya.index, nagoya[city],
+                 label=city, ls="-", marker="o", ms=2, lw=1)
 
     plt.plot([nagoya.index[0], nagoya.index[-1]], [1, 1], "k--")
     plt.grid()
@@ -59,7 +61,8 @@ def generate_rt_image_and_message():
     plt.suptitle(
         f"""愛知県の実効再生産数(Rt)の推移
 (主要市および県全体, {str(datetime.today().date())}現在)""", )
-    file_name = "rt" + str(datetime.today().date()).replace(":", "") + ".png"
+    file_name = os.path.join(
+        "data", "rt" + str(datetime.today().date()).replace(":", "") + ".png")
 
     plt.text(plt.gca().get_xlim()[0] - 2,
              plt.gca().get_ylim()[0] - 0.45,
@@ -71,7 +74,7 @@ def generate_rt_image_and_message():
 平均世代時間は5日、報告間隔は7日と仮定
 """,
              fontsize=5)
-    plt.savefig(file_name, facecolor="w", dpi=150)
+    plt.savefig(file_name, facecolor="w", dpi=200)
     plt.close()
 
     message = "[更新]昨日の愛知県内の実効再生産数(Rt)は、"
