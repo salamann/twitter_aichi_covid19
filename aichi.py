@@ -67,6 +67,12 @@ def generate_df_from_aichi(pdf_file_path):
                                         "年代・性別"] = df_all.at[no, "年代・性別"].split()
 
     try:
+        index = [_i for _d, _i in zip(
+            df_all["発表日"], df_all.index) if "患者発生届取り下げ" in _d][0]
+        df_all = df_all.drop(index, axis=0)
+        index = [_i for _d, _i in zip(
+            df_all["発表日"], df_all.index) if "欠番" in _d][0]
+        df_all = df_all.drop(index, axis=0)
         df_all["発表日"] = pandas.to_datetime(
             ['2021年' + _ for _ in df_all['発表日']], format='%Y年%m月%d日')
         # df_all = df_all.set_index("No")
@@ -132,6 +138,8 @@ def post_okazaki():
     soup = BeautifulSoup(html.content, "html.parser")
     h3 = soup.find(class_="article").find("h3")
     article_text = h3.find_all("a")
+    if article_text == []:
+        article_text = soup.find("h3")
     today = datetime.today()
     for a in article_text:
         # print(a.text)
@@ -148,10 +156,15 @@ def post_okazaki():
             num_today = int(nums[4]) - int(nums[2]) + 1
         elif len(nums) == 4:
             num_today = 1
+        elif len(nums) == 3:
+            num_today = int(nums[2])
         df0 = pandas.read_pickle("database.zip")
         num_last_week = get_number_by_delta(df0, -7, region="岡崎市")
-        article_url = urljoin(load_url,
-                              h3.find("a")['href'].replace("./", ""))
+        if h3.find("a") is not None:
+            article_url = urljoin(load_url,
+                                  h3.find("a")['href'].replace("./", ""))
+        else:
+            article_url = load_url
         # print(article_url)
         youbi = get_day_of_week_jp(today)
         if not os.path.isfile("okazaki_lock.zip"):
@@ -186,6 +199,8 @@ def post_toyohashi():
 
         today = datetime.today()
         nums = re.findall(r"\d+", article_text)
+        nums = [_num.translate(str.maketrans(
+            {chr(0xFF01 + i): chr(0x21 + i) for i in range(94)})) for _num in nums]
         date = datetime.strptime(f"{nums[1]}月{nums[2]}日", "%m月%d日")
         if (today.month == date.month) & (today.day == date.day):
             is_today = True
@@ -227,10 +242,29 @@ def post_toyota():
         is_today = True
     else:
         is_today = False
+
+    is_zero = False
+    if not is_today:
+        load_url2 = "https://www.city.toyota.aichi.jp/kurashi/kenkou/eisei/1037578.html"
+
+        html = requests.get(load_url2)
+        soup = BeautifulSoup(html.content, "html.parser")
+        toyota_new = soup.find("h2")
+        article_text = toyota_new.next_element.next_element.next_element.text
+        nums = re.findall(r"\d+", article_text)
+        is_zero = "いません" in article_text
+        date = datetime.strptime(f"{nums[0]}月{nums[1]}日", "%m月%d日")
+        if (today.month == date.month) & (today.day == date.day):
+            is_today = True
+        else:
+            is_today = False
+
     # is_today = True
     if is_today:
         if len(nums) == 3:
             num_today = 1
+        elif is_zero:
+            num_today = 0
         else:
             num_today = int(nums[3]) - int(nums[2]) + 1
         df0 = pandas.read_pickle("database.zip")
@@ -348,8 +382,8 @@ def post_zentai():
         header = f'[速報]本日の愛知県全体の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)でした。詳細は公式サイトを参照 > {article_url}'
         # print(header)
         post(header)
-        df_today.to_pickle(
-            f"{str(datetime.today()).split()[0]}_from_sum.zip")
+        df_today.to_pickle(os.path.join("data",
+                                        f"{str(datetime.today()).split()[0]}_from_sum.zip"))
         with open("zentai.lock", "w", encoding="utf-8") as f:
             f.write("")
         time.sleep(5)
@@ -357,6 +391,8 @@ def post_zentai():
 
 
 if __name__ == "__main__":
-    # generate_df_from_aichi("202011.pdf")
+    # generate_df_from_aichi(os.path.join("data", "202101.pdf"))
     # generate_df_from_aichi("20201207.pdf")
+    # post_toyohashi()
+    post_toyota()
     pass
