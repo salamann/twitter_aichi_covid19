@@ -40,7 +40,8 @@ def ranking_today():
             soup = BeautifulSoup(html.content, "html.parser")
             pdf_url = urljoin(multi_dirname(press_url, 3), soup.find(
                 class_="detail_free").find("a")["href"])
-            pdf_file_path = f"{str(datetime.today()).split()[0]}_aichi.pdf"
+            pdf_file_path = os.path.join(
+                "data", f"{str(datetime.today()).split()[0]}_aichi.pdf")
             urlretrieve(pdf_url, pdf_file_path)
 
             tbls = camelot.read_pdf(pdf_file_path, pages='1-end')
@@ -57,7 +58,8 @@ def ranking_today():
             # デプロイ前にタイムデルタを消す
             # _name = str(datetime.today()).split()[0]
             _name = str(datetime.today() - timedelta(days=1)).split()[0]
-            df_zentai = pandas.read_pickle(f"{_name}_from_sum.zip")
+            df_zentai = pandas.read_pickle(
+                os.path.join("data", f"{_name}_from_sum.zip"))
 
             aichi_kobetsu = pandas.DataFrame(
                 collections.Counter(df_all["居住地"]).most_common())
@@ -176,14 +178,17 @@ def update_database():
         if "愛知県内の発生事例" in p.text:
             pdf_url = p.find("a")["href"]
     pdf_url = urljoin(os.path.dirname(os.path.dirname(load_url)), pdf_url)
-    pdf_name = str(datetime.today()).split()[0].replace("-", "") + ".pdf"
+    pdf_name = os.path.join("data", str(datetime.today()).split()[
+                            0].replace("-", "") + ".pdf")
     urlretrieve(pdf_url, pdf_name)
 
     aichi.generate_df_from_aichi(pdf_name)
     # update_database()
 
-    pdf_name = str(datetime.today()).split()[0].replace("-", "") + ".zip"
-    df01 = pandas.read_pickle("202012.zip")
+    pdf_name = os.path.join("data", str(datetime.today()).split()[
+                            0].replace("-", "") + ".zip")
+    # df01 = pandas.read_pickle("202012.zip")
+    df01 = pandas.read_pickle("202101.zip")
     df02 = pandas.read_pickle(pdf_name)
     df03 = pandas.concat([df01, df02])
     df03.to_pickle("database.zip")
