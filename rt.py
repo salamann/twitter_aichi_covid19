@@ -65,7 +65,7 @@ def generate_rt_image_and_message():
         "data", "rt" + str(datetime.today().date()).replace(":", "") + ".png")
 
     plt.text(plt.gca().get_xlim()[0] - 2,
-             plt.gca().get_ylim()[0] - 0.45,
+             plt.gca().get_ylim()[0] - 0.5,
              """@AichiCovid19
 
 データ元
@@ -73,7 +73,7 @@ def generate_rt_image_and_message():
 実効再生産数の計算方法：Real-time estimation of the effective reproduction number of COVID-19 in Japan (https://github.com/contactmodel/COVID19-Japan-Reff)
 平均世代時間は5日、報告間隔は7日と仮定
 """,
-             fontsize=5)
+             fontsize=5, verticalalignment="top")
     plt.savefig(file_name, facecolor="w", dpi=200)
     plt.close()
 

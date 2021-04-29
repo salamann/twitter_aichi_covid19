@@ -66,13 +66,19 @@ def generate_df_from_aichi(pdf_file_path):
         df_all.at[no, "発表日"], df_all.at[no,
                                         "年代・性別"] = df_all.at[no, "年代・性別"].split()
 
+    exceptions2 = [index for index, _date in zip(
+        df_all.index, df_all["発表日"]) if "欠番" in _date]
+    exceptions = [index for index in df_all.index if "陽性者公表数の修正" in index]
+    exceptions += exceptions2
+    df_all = df_all.drop(exceptions, axis=0)
+
     try:
-        index = [_i for _d, _i in zip(
-            df_all["発表日"], df_all.index) if "患者発生届取り下げ" in _d][0]
-        df_all = df_all.drop(index, axis=0)
-        index = [_i for _d, _i in zip(
-            df_all["発表日"], df_all.index) if "欠番" in _d][0]
-        df_all = df_all.drop(index, axis=0)
+        # index = [_i for _d, _i in zip(
+        #     df_all["発表日"], df_all.index) if "患者発生届取り下げ" in _d][0]
+        # df_all = df_all.drop(index, axis=0)
+        # index = [_i for _d, _i in zip(
+        #     df_all["発表日"], df_all.index) if "欠番" in _d][0]
+        # df_all = df_all.drop(index, axis=0)
         df_all["発表日"] = pandas.to_datetime(
             ['2021年' + _ for _ in df_all['発表日']], format='%Y年%m月%d日')
         # df_all = df_all.set_index("No")
@@ -137,6 +143,7 @@ def post_okazaki():
     html = requests.get(load_url)
     soup = BeautifulSoup(html.content, "html.parser")
     h3 = soup.find(class_="article").find("h3")
+    is_num_today_zero = ("新規陽性者数は0件です" in h3.text)
     article_text = h3.find_all("a")
     if article_text == []:
         article_text = soup.find("h3")
@@ -152,7 +159,9 @@ def post_okazaki():
         is_today = False
     # is_today = True
     if is_today:
-        if (len(nums) == 6) or (len(nums) == 5):
+        if is_num_today_zero:
+            num_today = 0
+        elif (len(nums) == 6) or (len(nums) == 5):
             num_today = int(nums[4]) - int(nums[2]) + 1
         elif len(nums) == 4:
             num_today = 1
@@ -259,7 +268,7 @@ def post_toyota():
         else:
             is_today = False
 
-    # is_today = True
+    # ex1 = "市内在住者（3人）が新型コロナウイルスに感染したことが判明しました。（1248～1250例目）"
     if is_today:
         if len(nums) == 3:
             num_today = 1
@@ -267,6 +276,7 @@ def post_toyota():
             num_today = 0
         else:
             num_today = int(nums[3]) - int(nums[2]) + 1
+            # num_today = int(nums[2])
         df0 = pandas.read_pickle("database.zip")
         num_last_week = get_number_by_delta(df0, -7, region="豊田市")
         youbi = get_day_of_week_jp(today)
@@ -277,7 +287,7 @@ def post_toyota():
             header = f'[更新]豊田市の本日の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)に更新されました。詳細は公式サイトを参照 > {article_url}'
         else:
             header = None
-        if header is not None:
+        if (header is not None) and (num_today > 0):
             data_for_save = pandas.DataFrame(
                 [{'本日': num_today, '先週': num_last_week}], index=['豊田市'])
             data_for_save.to_pickle("toyota_lock.zip")
@@ -395,4 +405,5 @@ if __name__ == "__main__":
     # generate_df_from_aichi("20201207.pdf")
     # post_toyohashi()
     post_toyota()
+    # post_okazaki()
     pass

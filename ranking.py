@@ -32,7 +32,7 @@ def ranking_today():
 
         url_flake = ""
         for li in soup.find(class_="list_ccc").find_all("li"):
-            if (today in li.text) & ("患者の発生" in li.text) & ("愛知県職員における" not in li.text):
+            if (today in li.text) & ("感染症患者の発生" in li.text) & ("愛知県職員における" not in li.text):
                 url_flake = li.find("a")["href"]
         if url_flake != "":
             today_url = urljoin(multi_dirname(press_url, 3), url_flake)
@@ -136,7 +136,7 @@ def ranking_week_area():
         collections.Counter(this_week["住居地"]).most_common())
     pd_week[0] = [_.replace("⻄", "西").replace(
         '瀬⼾市', "瀬戸市").replace('⻑久⼿市', "長久手市").replace('⾧久手市', '長久手市') for _ in pd_week[0]]
-    pd_week = pd_week[~pd_week[0].str.contains("東京都|県|京都府|大阪府|北海道")]
+    pd_week = pd_week[~pd_week[0].str.contains("東京都|県|京都府|大阪府|北海道|堺市|関市|土岐市")]
     # pd_week = pd_week[(pd_week[0] != "三重県") & (pd_week[0] != "岐阜県") & (pd_week[0] != "千葉県")]
     pd_week = pd_week[pd_week[0] != ""]
     pd_week["per_capita"] = [int(num / pops.loc[city, "20201001"] * 10**5)
@@ -176,7 +176,8 @@ def update_database():
     # pdf_url = soup.find_all("span")[nspan+1].find("a")["href"]
     for p in soup.find_all("p"):
         if "愛知県内の発生事例" in p.text:
-            pdf_url = p.find("a")["href"]
+            pdf_url = p.next_sibling()[0]["href"]
+            # pdf_url = p.find("a")["href"]
     pdf_url = urljoin(os.path.dirname(os.path.dirname(load_url)), pdf_url)
     pdf_name = os.path.join("data", str(datetime.today()).split()[
                             0].replace("-", "") + ".pdf")
@@ -188,15 +189,18 @@ def update_database():
     pdf_name = os.path.join("data", str(datetime.today()).split()[
                             0].replace("-", "") + ".zip")
     # df01 = pandas.read_pickle("202012.zip")
-    df01 = pandas.read_pickle("202101.zip")
+    # df01 = pandas.read_pickle("202101.zip")
+    df01 = pandas.read_pickle(os.path.join("data", "202103.zip"))
     df02 = pandas.read_pickle(pdf_name)
     df03 = pandas.concat([df01, df02])
     df03.to_pickle("database.zip")
 
 
 if __name__ == "__main__":
-
-    ranking_today()
+    try:
+        ranking_today()
+    except:
+        pass
     update_database()
     ranking_week()
     ranking_week_area()
