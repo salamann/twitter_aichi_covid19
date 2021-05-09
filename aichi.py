@@ -347,6 +347,7 @@ def post_aichi():
             if (_day.month == today.month) and (_day.day == today.day) and (entry['title'] == '新型コロナウイルス感染症患者の発生について'):
                 article_url = entry['id']
                 is_today = True
+                break
         if is_today:
             load_url = article_url
             # load_url = 'https://www.pref.aichi.jp/site/covid19-aichi/pressrelease-ncov201208.html'
@@ -404,6 +405,7 @@ if __name__ == "__main__":
     # generate_df_from_aichi(os.path.join("data", "202101.pdf"))
     # generate_df_from_aichi("20201207.pdf")
     # post_toyohashi()
-    post_toyota()
+    # post_toyota()
+    post_aichi()
     # post_okazaki()
     pass

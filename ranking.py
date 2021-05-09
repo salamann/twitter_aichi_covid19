@@ -136,11 +136,19 @@ def ranking_week_area():
         collections.Counter(this_week["住居地"]).most_common())
     pd_week[0] = [_.replace("⻄", "西").replace(
         '瀬⼾市', "瀬戸市").replace('⻑久⼿市', "長久手市").replace('⾧久手市', '長久手市') for _ in pd_week[0]]
-    pd_week = pd_week[~pd_week[0].str.contains("東京都|県|京都府|大阪府|北海道|堺市|関市|土岐市")]
+    pd_week = pd_week[~pd_week[0].str.contains(
+        "東京都|県|京都府|大阪府|北海道|堺市|関市|土岐市|千葉市")]
     # pd_week = pd_week[(pd_week[0] != "三重県") & (pd_week[0] != "岐阜県") & (pd_week[0] != "千葉県")]
     pd_week = pd_week[pd_week[0] != ""]
-    pd_week["per_capita"] = [int(num / pops.loc[city, "20201001"] * 10**5)
-                             for city, num in zip(pd_week[0], pd_week[1])]
+    per_capita = list()
+    for city, num in zip(pd_week[0], pd_week[1]):
+        if city in set(pops.index.to_list()):
+            per_capita.append(int(num / pops.loc[city, "20201001"] * 10**5))
+        else:
+            per_capita.append(0)
+    # pd_week["per_capita"] = [int(num / pops.loc[city, "20201001"] * 10**5)
+    #                          for city, num in zip(pd_week[0], pd_week[1])]
+    pd_week["per_capita"] = per_capita
     pd_week = pd_week.sort_values("per_capita", ascending=False)
 
     ranking_text = "愛知県新型コロナ危険エリアランキング（昨日まで直近1週間の10万人あたり新型コロナウイルス感染者数）\n"
@@ -190,7 +198,7 @@ def update_database():
                             0].replace("-", "") + ".zip")
     # df01 = pandas.read_pickle("202012.zip")
     # df01 = pandas.read_pickle("202101.zip")
-    df01 = pandas.read_pickle(os.path.join("data", "202103.zip"))
+    df01 = pandas.read_pickle(os.path.join("data", "202104.zip"))
     df02 = pandas.read_pickle(pdf_name)
     df03 = pandas.concat([df01, df02])
     df03.to_pickle("database.zip")
