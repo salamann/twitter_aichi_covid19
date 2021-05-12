@@ -1,12 +1,13 @@
 from datetime import datetime
 import aichi
-
+import ichinomiya
 
 aichi.post_nagoya()
 aichi.post_okazaki()
 aichi.post_toyohashi()
-aichi.post_aichi()
 aichi.post_toyota()
+ichinomiya.post_ichinomiya()
+aichi.post_aichi()
 aichi.post_zentai()
 
 print(f"checked.. {datetime.today()}")

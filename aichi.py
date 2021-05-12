@@ -374,17 +374,19 @@ def post_zentai():
     is_okazaki_done = os.path.isfile("okazaki_lock.zip")
     is_nagoya_done = os.path.isfile("nagoya_lock.zip")
     is_aichi_done = os.path.isfile("aichi_lock.zip")
+    is_ichinomiya_done = os.path.isfile("ichinomiya_lock.zip")
 
     is_dones = [is_aichi_done, is_nagoya_done,
-                is_okazaki_done, is_toyohashi_done, is_toyota_done]
+                is_okazaki_done, is_toyohashi_done, is_toyota_done, is_ichinomiya_done]
     if (all(is_dones)) and (not os.path.isfile("zentai.lock")):
         df_toyohashi = pandas.read_pickle("toyohashi_lock.zip")
         df_toyota = pandas.read_pickle("toyota_lock.zip")
         df_okazaki = pandas.read_pickle("okazaki_lock.zip")
         df_nagoya = pandas.read_pickle("nagoya_lock.zip")
         df_aichi = pandas.read_pickle("aichi_lock.zip")
+        df_ichinomiya = pandas.read_pickle("ichinomiya_lock.zip")
         df_today = pandas.concat(
-            [df_toyohashi, df_aichi, df_nagoya, df_toyota, df_okazaki])
+            [df_toyohashi, df_aichi, df_nagoya, df_toyota, df_okazaki, df_ichinomiya])
         num_today = df_today['本日'].sum()
         num_last_week = df_today['先週'].sum()
         youbi = get_day_of_week_jp(datetime.today())
