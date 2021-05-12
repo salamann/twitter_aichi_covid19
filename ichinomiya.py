@@ -58,11 +58,10 @@ def post_ichinomiya():
     ichinomiya_info = get_ichinomiya_info()
     num_last_week = get_ichinomiya_last_week()
     article_url = ichinomiya_info["url"]
+    num_today = ichinomiya_info["number"]
 
     zip_path = pathlib.Path("ichinomiya_lock.zip")
-    if ichinomiya_info["is_today"] and not zip_path.exists():
-        num_today = ichinomiya_info["number"]
-
+    if ichinomiya_info["is_today"] and not zip_path.exists() and num_today >= 0:
         youbi = get_day_of_week_jp(today)
         header = f'[速報]一宮市の本日の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)でした。詳細は公式サイトを参照 > {article_url}'
         # print(header)

@@ -79,6 +79,11 @@ def generate_df_from_aichi(pdf_file_path):
         # index = [_i for _d, _i in zip(
         #     df_all["発表日"], df_all.index) if "欠番" in _d][0]
         # df_all = df_all.drop(index, axis=0)
+
+        for index in df_all[df_all["年代・性別"] == ""].index.to_list():
+            df_all.loc[index, "発表日":"住居地"] = df_all.loc[index,
+                                                        "発表日"].split("\n")
+
         df_all["発表日"] = pandas.to_datetime(
             ['2021年' + _ for _ in df_all['発表日']], format='%Y年%m月%d日')
         # df_all = df_all.set_index("No")
@@ -113,6 +118,7 @@ def get_number_by_delta(data_frame, days_before, region=None):
             cond0 &= (data_frame['住居地'] != '豊橋市')
             cond0 &= (data_frame['住居地'] != '豊田市')
             cond0 &= (data_frame['住居地'] != '岡崎市')
+            cond0 &= (data_frame['住居地'] != '一宮市')
             data_frame = data_frame[cond0]
         else:
             data_frame = data_frame[data_frame['住居地'] == region]
@@ -359,7 +365,7 @@ def post_aichi():
             df0 = pandas.read_pickle("database.zip")
             num_last_week = get_number_by_delta(df0, -7, region="愛知県")
             youbi = get_day_of_week_jp(today)
-            header = f'[速報]愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市を除く愛知県）の本日の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)でした。詳細は公式サイトを参照 > {article_url}'
+            header = f'[速報]愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）の本日の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)でした。詳細は公式サイトを参照 > {article_url}'
             post(header)
             data_for_save = pandas.DataFrame(
                 [{'本日': num_today, '先週': num_last_week}], index=['愛知県'])
