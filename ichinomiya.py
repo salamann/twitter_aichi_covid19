@@ -76,3 +76,4 @@ def post_ichinomiya():
 
 if __name__ == "__main__":
     post_ichinomiya()
+    # print(get_ichinomiya_info())
