@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 import time
 import pandas
+import pathlib
+from typing import Callable
 
 
 def generate_post(gov_info: dict) -> str:
@@ -57,6 +59,26 @@ def get_number_by_delta(data_frame: pandas.DataFrame, days_before: int, region: 
 
 def get_last_week_number(city: str) -> int:
     return get_number_by_delta(pandas.read_pickle("database.zip"), -7, region=city)
+
+
+def pre_post(city: str, zip_path: str, get_info: Callable) -> dict:
+    today = datetime.today()
+    city_info = get_info(engine_number=1)
+    num_last_week = get_last_week_number(city)
+    num_today = city_info["number"]
+
+    zip_path = pathlib.Path(zip_path)
+    is_postable = (city_info["is_today"]) & (
+        not zip_path.exists()) & (num_today >= 0)
+    info = {"number_last_week": num_last_week,
+            "number_today": num_today,
+            "city": city,
+            "article_url": city_info["url"],
+            "weekday": get_day_of_week_jp(today),
+            "zip_path": zip_path,
+            "is_postable": is_postable}
+    info["headline"] = generate_post(info)
+    return info
 
 
 if __name__ == "__main__":
