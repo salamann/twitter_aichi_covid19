@@ -61,16 +61,18 @@ def generate_df_from_aichi(pdf_file_path):
     df_all = df_all[df_all["No"] != "No"]
     df_all = df_all.set_index("No")
 
+    exceptions3 = [index for index, _date in zip(
+        df_all.index, df_all["年代・性別"]) if "削除" in _date]
+    exceptions2 = [index for index, _date in zip(
+        df_all.index, df_all["発表日"]) if "欠番" in _date]
+    exceptions = [index for index in df_all.index if "陽性者公表数の修正" in index]
+    exceptions += exceptions2 + exceptions3
+    df_all = df_all.drop(exceptions, axis=0)
+
     # 10歳未満バグを回避
     for no in df_all[df_all["発表日"] == ""].index:
         df_all.at[no, "発表日"], df_all.at[no,
                                         "年代・性別"] = df_all.at[no, "年代・性別"].split()
-
-    exceptions2 = [index for index, _date in zip(
-        df_all.index, df_all["発表日"]) if "欠番" in _date]
-    exceptions = [index for index in df_all.index if "陽性者公表数の修正" in index]
-    exceptions += exceptions2
-    df_all = df_all.drop(exceptions, axis=0)
 
     try:
         # index = [_i for _d, _i in zip(
@@ -344,7 +346,7 @@ def post_aichi():
             'https://www.pref.aichi.jp/rss/10/site-758.xml')
 
         is_today = False
-        today = datetime.today()
+        today = datetime.today() - timedelta(hours=6)
         for entry in d_atom['entries']:
             _day = datetime.strptime(
                 entry['updated'], "%Y-%m-%dT%H:%M:%S+09:00")
@@ -395,14 +397,14 @@ def post_zentai():
             [df_toyohashi, df_aichi, df_nagoya, df_toyota, df_okazaki, df_ichinomiya])
         num_today = df_today['本日'].sum()
         num_last_week = df_today['先週'].sum()
-        youbi = get_day_of_week_jp(datetime.today())
+        youbi = get_day_of_week_jp(datetime.today()-timedelta(hours=6))
 
         article_url = 'https://www.pref.aichi.jp/site/covid19-aichi/'
         header = f'[速報]本日の愛知県全体の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)でした。詳細は公式サイトを参照 > {article_url}'
         # print(header)
         post(header)
         df_today.to_pickle(os.path.join("data",
-                                        f"{str(datetime.today()).split()[0]}_from_sum.zip"))
+                                        f"{str(datetime.today()-timedelta(hours=6)).split()[0]}_from_sum.zip"))
         with open("zentai.lock", "w", encoding="utf-8") as f:
             f.write("")
         time.sleep(5)
@@ -414,6 +416,6 @@ if __name__ == "__main__":
     # generate_df_from_aichi("20201207.pdf")
     # post_toyohashi()
     # post_toyota()
-    post_aichi()
+    # post_aichi()
     # post_okazaki()
     pass
