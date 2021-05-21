@@ -9,7 +9,7 @@ import re
 from utility import pre_post, post_city
 
 
-def get_toyota_info(engine_number=2) -> dict:
+def get_toyota_info(engine_number=1) -> dict:
 
     today = datetime.today()
     yesterday = today - timedelta(days=1)
