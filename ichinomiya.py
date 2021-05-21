@@ -90,7 +90,7 @@ def get_ichinomiya_info(engine_number=1) -> dict:
 #     return info
 
 
-def post_toyota():
+def post_ichinomiya():
     post_city(pre_post("一宮市", "ichinomiya_lock.zip", get_ichinomiya_info))
 
 

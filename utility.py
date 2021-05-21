@@ -19,7 +19,7 @@ def post_city(info: dict) -> None:
 
     city = info["city"]
     if info["is_postable"]:
-        post(info)
+        post(info["headline"])
 
         data_for_save = pandas.DataFrame(
             [{'本日': info["number_today"], '先週': info["number_last_week"]}], index=[city])

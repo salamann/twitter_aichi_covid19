@@ -8,7 +8,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-# from twitter_post import post
+from twitter_post import post
 import re
 import PyPDF2
 
@@ -397,7 +397,7 @@ def post_zentai():
             [df_toyohashi, df_aichi, df_nagoya, df_toyota, df_okazaki, df_ichinomiya])
         num_today = df_today['本日'].sum()
         num_last_week = df_today['先週'].sum()
-        youbi = get_day_of_week_jp(datetime.today()-timedelta(hours=6))
+        youbi = get_day_of_week_jp(datetime.today() - timedelta(hours=6))
 
         article_url = 'https://www.pref.aichi.jp/site/covid19-aichi/'
         header = f'[速報]本日の愛知県全体の新型コロナウイルスの新規感染者数は{num_today}人(先週の{youbi}に比べて{num_today-num_last_week:+}人)でした。詳細は公式サイトを参照 > {article_url}'
