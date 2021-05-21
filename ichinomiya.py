@@ -10,10 +10,11 @@ import pathlib
 import pandas
 from aichi import get_number_by_delta
 from aichi import get_day_of_week_jp
+from utility import generate_post
 from twitter_post import post
 
 
-def get_ichinomiya_info():
+def get_ichinomiya_info() -> dict:
 
     # Home page
     url = "https://www.city.ichinomiya.aichi.jp/covid19/1033846/index.html"
@@ -74,6 +75,28 @@ def post_ichinomiya():
         print("一宮市更新しました", datetime.today())
 
 
+def prepost_ichinomiya() -> dict:
+    city = "一宮市"
+    today = datetime.today()
+    ichinomiya_info = get_ichinomiya_info()
+    num_last_week = get_ichinomiya_last_week()
+    num_today = ichinomiya_info["number"]
+
+    zip_path = pathlib.Path("ichinomiya_lock.zip")
+    is_postable = (ichinomiya_info["is_today"]) & (
+        not zip_path.exists()) & (num_today >= 0)
+    info = {"number_last_week": num_last_week,
+            "number_today": num_today,
+            "city": city,
+            "article_url": ichinomiya_info["url"],
+            "weekday": get_day_of_week_jp(today),
+            "zip_path": zip_path,
+            "is_postable": is_postable}
+    info["headline"] = generate_post(info)
+    return info
+
+
 if __name__ == "__main__":
-    post_ichinomiya()
+    # post_ichinomiya()
     # print(get_ichinomiya_info())
+    print(prepost_ichinomiya())

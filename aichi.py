@@ -8,7 +8,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from twitter_post import post
+# from twitter_post import post
 import re
 import PyPDF2
 
