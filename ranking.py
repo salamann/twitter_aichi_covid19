@@ -205,10 +205,10 @@ def update_database():
 
 
 if __name__ == "__main__":
-    # try:
-    #     ranking_today()
-    # except:
-    #     pass
+    try:
+        ranking_today()
+    except:
+        pass
     update_database()
     ranking_week()
     ranking_week_area()
