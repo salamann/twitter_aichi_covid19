@@ -44,7 +44,7 @@ def get_toyohashi_info(engine_number=1):
     return {"is_today": is_today, "is_yesterday": is_yesterday, "number": today_number, "url": detailed_url}
 
 
-def post_nagoya():
+def post_toyohashi():
     post_city(pre_post("豊橋市", "toyohashi_lock.zip", get_toyohashi_info))
 
 
