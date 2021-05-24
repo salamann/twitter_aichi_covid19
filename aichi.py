@@ -74,7 +74,7 @@ def generate_df_from_aichi(pdf_file_path):
         df_all.at[no, "発表日"], df_all.at[no,
                                         "年代・性別"] = df_all.at[no, "年代・性別"].split()
 
-    try:
+    if 1:
         # index = [_i for _d, _i in zip(
         #     df_all["発表日"], df_all.index) if "患者発生届取り下げ" in _d][0]
         # df_all = df_all.drop(index, axis=0)
@@ -83,12 +83,18 @@ def generate_df_from_aichi(pdf_file_path):
         # df_all = df_all.drop(index, axis=0)
 
         for index in df_all[df_all["年代・性別"] == ""].index.to_list():
-            df_all.loc[index, "発表日":"住居地"] = df_all.loc[index,
-                                                        "発表日"].split("\n")
+            if len(happyoubi := df_all.loc[index, "発表日"].split("\n")) == 5:
+                happyoubi.insert(2, "")
+            else:
+                add_number = 6 - len(happyoubi)
+                happyoubi += [""] * add_number
+            df_all.loc[index, :] = happyoubi
 
         df_all["発表日"] = pandas.to_datetime(
             ['2021年' + _ for _ in df_all['発表日']], format='%Y年%m月%d日')
         # df_all = df_all.set_index("No")
+    try:
+        assert ValueError
     except ValueError:
         # for -202011
         df202011 = copy.deepcopy(df_all.iloc[:10128, :])
@@ -103,6 +109,20 @@ def generate_df_from_aichi(pdf_file_path):
         df202011['No'] = [int(_) for _ in df202011["No"]]
         df202011 = df202011.sort_values("No")
         # df_all = df202011.set_index("No")
+
+    corrected_city = list()
+    for city in df_all["住居地"].to_list():
+        if city == "⻑久⼿市":
+            corrected_city.append("長久手市")
+        elif (city == "⻄尾市"):
+            corrected_city.append("西尾市")
+        elif (city == "瀬⼾市"):
+            corrected_city.append("瀬戸市")
+        elif (city == "愛⻄市"):
+            corrected_city.append("愛西市")
+        else:
+            corrected_city.append(city)
+    df_all["住居地"] = corrected_city
 
     df_all.to_pickle(f"{os.path.splitext(pdf_file_path)[0]}.zip")
 
