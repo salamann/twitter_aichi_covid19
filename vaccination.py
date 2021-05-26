@@ -3,8 +3,6 @@ from pathlib import Path
 import pandas
 import re
 from datetime import datetime
-import copy
-import requests
 from bs4 import BeautifulSoup
 from typing import Union
 
@@ -39,21 +37,23 @@ def get_aichi_population() -> int:
     soup = BeautifulSoup(site.content, "lxml")
     tds = soup.find(id="submenu_toukei_right_omonagyoumu").find_all("td")
     [num] = [i for i, _ in enumerate(tds) if "人口" in _.text]
-    return int(tds[num+1].text.replace("人", "").replace(",", ""))
+    return int(tds[num + 1].text.replace("人", "").replace(",", ""))
 
 
 def get_vaccination_number() -> int:
+    # import ssl
+    # context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    # context.set_ciphers('DEFAULT@SECLEVEL=1')
     url_medical_staff = "https://www.kantei.go.jp/jp/content/IRYO-kenbetsu-vaccination_data.xlsx"
-    url_non_medical = "https://www.kantei.go.jp/jp/content/KOREI-kenbetsu-vaccination_data.xlsx"
     file_name_medical_staff = Path(url_medical_staff).name
-
-    file_name_non_medical = Path(url_non_medical).name
 
     url_data_medical = requests.get(url_medical_staff).content
 
     with open(file_name_medical_staff, mode='wb') as f:
         f.write(url_data_medical)
 
+    url_non_medical = "https://www.kantei.go.jp/jp/content/KOREI-kenbetsu-vaccination_data.xlsx"
+    file_name_non_medical = Path(url_non_medical).name
     url_data_non_medical = requests.get(url_non_medical).content
 
     with open(file_name_non_medical, mode='wb') as f:
@@ -70,7 +70,7 @@ def get_vaccination_number() -> int:
 
     [nm] = df_m["医療従事者接種回数"].to_list()
     [ne] = df_g["高齢者等接種回数"].to_list()
-    return nm+ne
+    return nm + ne
 
 
 def check_update() -> Union[bool, int]:
@@ -93,10 +93,18 @@ def generate_headline():
     is_update, nvac = check_update()
     if is_update:
         url_kantei = "https://www.kantei.go.jp/jp/headline/kansensho/vaccine.html"
-        return f"現在の愛知県の新型コロナワクチンの総接種回数は{nvac}回です。現在の人口カバー率は{nvac/get_aichi_population()/2*100:.2f}%です。詳しくは首相官邸サイトを参照 > {url_kantei}"
+        return f"[更新]現在の愛知県の新型コロナワクチンの総接種回数は{nvac}回です。現在の人口カバー率は{nvac/get_aichi_population()/2*100:.2f}%です。詳しくは首相官邸サイトを参照 > {url_kantei}"
     else:
         return None
 
 
+def post() -> None:
+    from twitter_post import post
+
+    headline = generate_headline()
+    if headline is not None:
+        post(headline)
+
+
 if __name__ == "__main__":
-    print(check_update())
+    print(generate_headline())
