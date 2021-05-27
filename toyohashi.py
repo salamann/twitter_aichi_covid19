@@ -1,5 +1,4 @@
 
-from typing import Text
 from bs4 import BeautifulSoup
 import requests
 from datetime import datetime, timedelta
@@ -21,7 +20,6 @@ def get_toyohashi_info(engine_number=1):
     html = requests.get(load_url)
     soup = BeautifulSoup(html.content, "lxml")
     text_line = soup.find(class_='Item_normal')
-    print(text_line.text)
 
     text_line_text = text_line.text.replace("\n", "").replace("\xa0", "")
     detailed_url = load_url
