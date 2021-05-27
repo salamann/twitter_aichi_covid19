@@ -7,6 +7,24 @@ from bs4 import BeautifulSoup
 from typing import Union
 
 
+def get_open_data() -> str:
+    url = "https://vrs-data.cio.go.jp/vaccination/opendata/latest/summary_by_prefecture.csv"
+    file_name = Path(url).name
+
+    url_data = requests.get(url).content
+
+    with open(file_name, mode='wb') as f:
+        f.write(url_data)
+    return file_name
+
+
+def get_vaccination_number_from_open_data(file_name) -> int:
+    df = pandas.read_csv(file_name, encoding="sjis")
+    df = df.set_index("prefecture_name")
+    return sum(
+        df.loc["愛知県", "count_first_or_mid_general":"count_second_or_full_general"])
+
+
 def get_df(file_name: str, column_name: str) -> pandas.DataFrame:
 
     df_medical = pandas.read_excel(file_name)
@@ -52,15 +70,22 @@ def get_vaccination_number() -> int:
     with open(file_name_medical_staff, mode='wb') as f:
         f.write(url_data_medical)
 
-    url_non_medical = "https://www.kantei.go.jp/jp/content/KOREI-kenbetsu-vaccination_data.xlsx"
-    file_name_non_medical = Path(url_non_medical).name
-    url_data_non_medical = requests.get(url_non_medical).content
-
-    with open(file_name_non_medical, mode='wb') as f:
-        f.write(url_data_non_medical)
-
     df_m = get_df(file_name_medical_staff, "医療従事者接種回数")
-    df_g = get_df(file_name_non_medical, "高齢者等接種回数")
+    [nm] = df_m["医療従事者接種回数"].to_list()
+
+    # url_non_medical = "https://www.kantei.go.jp/jp/content/KOREI-kenbetsu-vaccination_data.xlsx"
+    # file_name_non_medical = Path(url_non_medical).name
+    # url_data_non_medical = requests.get(url_non_medical).content
+
+    # with open(file_name_non_medical, mode='wb') as f:
+    #     f.write(url_data_non_medical)
+
+    # df_g = get_df(file_name_non_medical, "高齢者等接種回数")
+    ne = get_vaccination_number_from_open_data(get_open_data())
+    df_g = pandas.DataFrame(
+        [ne], index=[datetime.today().date()], columns=["高齢者等接種回数"])
+    # print(df_g)
+
     if (path_df_vac := Path("df_vac.zip")).exists():
         df_vac = pandas.read_pickle(path_df_vac)
         df_today = pandas.concat([df_vac, df_m, df_g])
@@ -68,8 +93,7 @@ def get_vaccination_number() -> int:
         df_today = pandas.concat([df_m, df_g])
     df_today.to_pickle("df_vac.zip")
 
-    [nm] = df_m["医療従事者接種回数"].to_list()
-    [ne] = df_g["高齢者等接種回数"].to_list()
+    # [ne] = df_g["高齢者等接種回数"].to_list()
     return nm + ne
 
 
@@ -108,3 +132,5 @@ def post() -> None:
 
 if __name__ == "__main__":
     print(generate_headline())
+    # print(get_open_data())
+    # print(get_vaccination_number())
