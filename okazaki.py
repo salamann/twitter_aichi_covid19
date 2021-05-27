@@ -26,7 +26,11 @@ def get_okazaki_info(engine_number=1):
     if ("新規陽性者数は0件です" in h3.text):
         today_number = 0
     else:
-        text_line = h3.find("a")
+        text_lines = h3.find_all("a")
+        for text_line in text_lines:
+            if "新型コロナウイルス" in text_line.text:
+                break
+        print(text_line)
 
         pattern = r'.*?（(\d+)例目'
         pattern2 = r'.*?～(\d+)例目'
