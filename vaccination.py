@@ -1,10 +1,11 @@
-import requests
 from pathlib import Path
-import pandas
 import re
 from datetime import datetime
-from bs4 import BeautifulSoup
 from typing import Union
+
+import pandas
+import requests
+from bs4 import BeautifulSoup
 
 
 def get_open_data() -> str:
@@ -110,10 +111,12 @@ def check_update() -> Union[bool, int]:
         if nvac == vac_number_ex:
             return False, nvac
         elif nvac > vac_number_ex:
+            with open(vac_path, "w") as f:
+                f.write(str(nvac))
             return True, nvac
 
 
-def generate_headline():
+def generate_headline() -> None:
     is_update, nvac = check_update()
     if is_update:
         url_kantei = "https://www.kantei.go.jp/jp/headline/kansensho/vaccine.html"
