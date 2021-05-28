@@ -30,7 +30,7 @@ def get_okazaki_info(engine_number=1):
         for text_line in text_lines:
             if "新型コロナウイルス" in text_line.text:
                 break
-        print(text_line)
+        # print(text_line)
 
         pattern = r'.*?（(\d+)例目'
         pattern2 = r'.*?～(\d+)例目'
@@ -44,7 +44,7 @@ def get_okazaki_info(engine_number=1):
         result = repatter.match(text_line.text)
         today_number2 = int(result.group(1))
 
-        today_number = today_number2 - today_number1+1
+        today_number = today_number2 - today_number1 + 1
 
     today = datetime.today()
     yesterday = today - timedelta(days=1)
