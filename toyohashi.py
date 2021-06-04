@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timedelta
 import re
 
-from utility import pre_post, post_city
+from utility import pre_post, post_city, convert_zenkaku
 
 
 def get_toyohashi_info(engine_number=1):
@@ -29,8 +29,8 @@ def get_toyohashi_info(engine_number=1):
 
     today_date = f"{today.month}月{today.day}日"
     yesterday_date = f"{yesterday.month}月{yesterday.day}日"
-    is_today = (today_date in text_line.text)
-    is_yesterday = (yesterday_date in text_line.text)
+    is_today = (today_date in convert_zenkaku(text_line.text))
+    is_yesterday = (yesterday_date in convert_zenkaku(text_line.text))
 
     pattern = r'.*?新規感染者数：(\d+)件'
 

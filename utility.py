@@ -81,5 +81,9 @@ def pre_post(city: str, zip_path: str, get_info: Callable) -> dict:
     return info
 
 
+def convert_zenkaku(text):
+    return text.translate(str.maketrans({chr(0xFF01 + i): chr(0x21 + i) for i in range(94)}))
+
+
 if __name__ == "__main__":
     pass
