@@ -66,8 +66,14 @@ def get_toyota_info(engine_number=1) -> dict:
 
 
 def post_toyota():
-    post_city(pre_post("豊田市", "toyota_lock.zip", get_toyota_info))
+    try:
+        post_city(pre_post("豊田市", "toyota_lock.zip", get_toyota_info))
+    except AttributeError:
+        post_city(pre_post("豊田市", "toyota_lock.zip",
+                           get_toyota_info, engine_number=2))
 
 
 if __name__ == "__main__":
-    print(get_toyota_info())
+    # print(get_toyota_info())
+    post_city(pre_post("豊田市", "toyota_lock.zip",
+                       get_toyota_info, engine_number=2))
