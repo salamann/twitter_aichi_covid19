@@ -26,6 +26,16 @@ def get_vaccination_number_from_open_data(file_name) -> int:
         df.loc["愛知県", "count_first_or_mid_general":"count_second_or_full_general"])
 
 
+def get_non_medical_number(file_name) -> dict:
+    df = pandas.read_csv(file_name, encoding="sjis")
+    df = df.set_index("prefecture_name")
+    # df.loc["愛知県",
+    #        "count_first_or_mid_general":"count_second_or_full_general"]
+    n_first_dose = int(df.at["愛知県", "count_first_or_mid_general"])
+    n_second_dose = int(df.at["愛知県", "count_second_or_full_general"])
+    return {"1回目": n_first_dose, "2回目": n_second_dose}
+
+
 def get_df(file_name: str, column_name: str) -> pandas.DataFrame:
 
     df_medical = pandas.read_excel(file_name)
@@ -50,6 +60,29 @@ def get_df(file_name: str, column_name: str) -> pandas.DataFrame:
     return df_of_day
 
 
+def get_medical_number(file_name: str) -> dict:
+
+    df_medical = pandas.read_excel(file_name)
+    date_text = "".join(
+        [_ for _ in df_medical.loc[0].to_list() if not pandas.isna(_)])
+
+    pattern = r'.*?(\d+)月(\d+)日時点'
+
+    repatter = re.compile(pattern)
+    result = repatter.match(date_text)
+
+    # date_of_day = datetime.strptime(
+    #     f"2021_{result.group(1)}_{result.group(2)}", "%Y_%m_%d")
+#     df_medical = pandas.read_excel(file_name_medical_staff)
+    df_medical.columns = df_medical.loc[1, :].to_list()
+    df_medical = df_medical.loc[:, "都道府県名":"内２回目"]
+    df_medical = df_medical.dropna()
+    df_of_day = df_medical[df_medical["都道府県名"].str.contains("愛知県")]
+    [n_first_dose] = df_of_day["内１回目"].to_list()
+    [n_second_dose] = df_of_day["内２回目"].to_list()
+    return {"1回目": n_first_dose, "2回目": n_second_dose}
+
+
 def get_aichi_population() -> int:
     url_aichi_population = "https://www.pref.aichi.jp/toukei/"
     site = requests.get(url_aichi_population)
@@ -57,6 +90,17 @@ def get_aichi_population() -> int:
     tds = soup.find(id="submenu_toukei_right_omonagyoumu").find_all("td")
     [num] = [i for i, _ in enumerate(tds) if "人口" in _.text]
     return int(tds[num + 1].text.replace("人", "").replace(",", ""))
+
+
+def get_medical_data() -> str:
+    url_medical_staff = "https://www.kantei.go.jp/jp/content/IRYO-kenbetsu-vaccination_data.xlsx"
+    file_name_medical_staff = Path(url_medical_staff).name
+
+    url_data_medical = requests.get(url_medical_staff).content
+
+    with open(file_name_medical_staff, mode='wb') as f:
+        f.write(url_data_medical)
+    return file_name_medical_staff
 
 
 def get_vaccination_number() -> int:
@@ -116,6 +160,20 @@ def check_update() -> Union[bool, int]:
             return True, nvac
 
 
+def generate_headline_first_second(medical_dict: dict, nonmedical_dict: dict) -> str:
+    n_first_dose = medical_dict["1回目"] + nonmedical_dict["1回目"]
+    n_second_dose = medical_dict["2回目"] + nonmedical_dict["2回目"]
+    n_total = n_first_dose+n_second_dose
+    aichi_pop = get_aichi_population()
+    url_kantei = "https://www.kantei.go.jp/jp/headline/kansensho/vaccine.html"
+    headline = f"[更新]現在の愛知県の新型コロナワクチンの総接種回数は{n_total}回"
+    headline += f"(1回目接種{n_first_dose}回、2回目接種{n_second_dose}回)です。"
+    headline += f"1回目接種率は{n_first_dose/aichi_pop*100:.2f}%、"
+    headline += f"2回目接種率は{n_second_dose/aichi_pop*100:.2f}%です。"
+    headline += f"詳しくは首相官邸サイトを参照 > {url_kantei}"
+    return headline
+
+
 def generate_headline() -> None:
     is_update, nvac = check_update()
     if is_update:
@@ -133,7 +191,25 @@ def post() -> None:
         post(headline)
 
 
+def post2_vaccination() -> None:
+    from twitter_post import post2
+    medical = get_medical_number(get_medical_data())
+    non_medical = get_non_medical_number(get_open_data())
+    headline = generate_headline_first_second(medical, non_medical)
+    post2(headline)
+
+
 if __name__ == "__main__":
-    print(generate_headline())
+    post2_vaccination()
+    # medical = get_medical_number(get_medical_data())
+    # non_medical = get_non_medical_number(get_open_data())
+    # print(generate_headline_first_second(medical, non_medical))
+    # a = get_vaccination_number_from_open_data_df("summary_by_prefecture.csv")
+    # print(a["count_first_or_mid_general"])
+    # print(a["count_second_or_full_general"])
+    # print(get_medical_number("IRYO-kenbetsu-vaccination_data.xlsx"))
+    # df_m = get_df("IRYO-kenbetsu-vaccination_data.xlsx", "医療従事者接種回数")
+
+    # print(generate_headline())
     # print(get_open_data())
     # print(get_vaccination_number())

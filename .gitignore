@@ -138,7 +138,6 @@ pops.xlsx
 20210122.pdf
 20210122.zip
 checked.txt
-twitter_post.py
 2021-01-23_aichi.pdf
 20210123.pdf
 20210123.zip
@@ -160,3 +159,4 @@ KOREI-kenbetsu-vaccination_data.xlsx
 summary_by_prefecture.csv
 vac_number_latest.txt
 Untitled1.ipynb
+config.py
