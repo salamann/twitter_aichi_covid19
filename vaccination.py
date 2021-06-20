@@ -183,24 +183,52 @@ def generate_headline() -> None:
         return None
 
 
+# def post() -> None:
+#     from twitter_post import post
+
+#     headline = generate_headline()
+#     if headline is not None:
+#         post(headline)
+
+
 def post() -> None:
     from twitter_post import post
-
-    headline = generate_headline()
-    if headline is not None:
-        post(headline)
-
-
-def post2_vaccination() -> None:
-    from twitter_post import post2
     medical = get_medical_number(get_medical_data())
     non_medical = get_non_medical_number(get_open_data())
     headline = generate_headline_first_second(medical, non_medical)
-    post2(headline)
+
+    last_number = get_last_total_number()
+    current_numer = extract_total_number(headline)
+    if current_numer > last_number:
+        post(headline)
+
+
+def get_last_post(timelines) -> str:
+    for timeline in timelines:
+        if "コロナワクチン" in timeline["text"]:
+            return timeline["text"]
+
+
+def extract_total_number(text: str) -> int:
+    pattern = r'.*?総接種回数は(\d+)回'
+
+    # compile then match
+    repatter = re.compile(pattern)
+    result = repatter.match(text)
+
+    return int(result.group(1))
+
+
+def get_last_total_number() -> int:
+    from twitter_post import get_posts
+    timelines = get_posts()
+    text_line_text = get_last_post(timelines)
+    return extract_total_number(text_line_text)
 
 
 if __name__ == "__main__":
-    post2_vaccination()
+    pass
+    # post2_vaccination()
     # medical = get_medical_number(get_medical_data())
     # non_medical = get_non_medical_number(get_open_data())
     # print(generate_headline_first_second(medical, non_medical))
