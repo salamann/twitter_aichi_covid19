@@ -22,10 +22,25 @@ def get_ichinomiya_info(engine_number=1) -> dict:
     detailed_url = urllib.parse.urljoin(url, element_url)
     res = requests.get(detailed_url)
     soup = BeautifulSoup(res.content, "html.parser")
-    [text_line] = [p for p in soup.find(id="content").find_all(
-        "p") if "新型コロナウイルス感染者の発生が確認されました" in p.text]
 
-    today = datetime.today()
+    text_line = None
+    for text in [p for p in soup.find(id="content").find_all(
+            "p") if "新型コロナウイルス感染者の発生が確認されました" in p.text]:
+        text_line = text
+    if text_line is not None:
+        pattern = r'.*?(\d+)名'
+
+        # compile then match
+        repatter = re.compile(pattern)
+        result = repatter.match(text_line.text)
+
+        today_number = int(result.group(1))
+    elif len(text_line := [p for p in soup.find(id="content").find_all(
+            "p") if "新型コロナウイルスの新たな感染者の発生は確認されませんでした" in p.text]) == 1:
+        today_number = 0
+        [text_line] = text_line
+
+    today = datetime.today() - timedelta(hours=6)
     yesterday = today - timedelta(days=1)
 
     today_date = f"{today.month}月{today.day}日"
@@ -33,13 +48,6 @@ def get_ichinomiya_info(engine_number=1) -> dict:
     is_today = (today_date in text_line.text)
     is_yesterday = (yesterday_date in text_line.text)
 
-    pattern = r'.*?(\d+)名'
-
-    # compile then match
-    repatter = re.compile(pattern)
-    result = repatter.match(text_line.text)
-
-    today_number = int(result.group(1))
     return {"is_today": is_today, "is_yesterday": is_yesterday, "number": today_number, "url": detailed_url}
 
 
@@ -96,5 +104,5 @@ def post_ichinomiya():
 
 if __name__ == "__main__":
     # post_ichinomiya()
-    # print(get_ichinomiya_info())
-    print(pre_post("一宮市", "ichinomiya_lock.zip", get_ichinomiya_info))
+    print(get_ichinomiya_info())
+    # print(pre_post("一宮市", "ichinomiya_lock.zip", get_ichinomiya_info))
