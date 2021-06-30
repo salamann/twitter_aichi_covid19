@@ -5,9 +5,9 @@ import nagoya
 import toyohashi
 import toyota
 import okazaki
-import vaccination
+# import vaccination
 
-vaccination.post()
+# vaccination.post()
 # aichi.post_nagoya()
 nagoya.post_nagoya()
 # aichi.post_okazaki()
