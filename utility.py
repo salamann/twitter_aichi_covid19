@@ -61,8 +61,8 @@ def get_last_week_number(city: str) -> int:
     return get_number_by_delta(pandas.read_pickle("database.zip"), -7, region=city)
 
 
-def pre_post(city: str, zip_path: str, get_info: Callable, engine_number: int=1) -> dict:
-    today = datetime.today()
+def pre_post(city: str, zip_path: str, get_info: Callable, engine_number: int = 1) -> dict:
+    today = datetime.today() - timedelta(hours=6)
     city_info = get_info(engine_number)
     num_last_week = get_last_week_number(city)
     num_today = city_info["number"]

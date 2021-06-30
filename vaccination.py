@@ -163,7 +163,7 @@ def check_update() -> Union[bool, int]:
 def generate_headline_first_second(medical_dict: dict, nonmedical_dict: dict) -> str:
     n_first_dose = medical_dict["1回目"] + nonmedical_dict["1回目"]
     n_second_dose = medical_dict["2回目"] + nonmedical_dict["2回目"]
-    n_total = n_first_dose+n_second_dose
+    n_total = n_first_dose + n_second_dose
     aichi_pop = get_aichi_population()
     url_kantei = "https://www.kantei.go.jp/jp/headline/kansensho/vaccine.html"
     headline = f"[更新]現在の愛知県の新型コロナワクチンの総接種回数は{n_total}回"
@@ -201,6 +201,8 @@ def post() -> None:
     current_numer = extract_total_number(headline)
     if current_numer > last_number:
         post(headline)
+    else:
+        print("The number is the same as the last number.")
 
 
 def get_last_post(timelines) -> str:
@@ -227,7 +229,7 @@ def get_last_total_number() -> int:
 
 
 if __name__ == "__main__":
-    pass
+    post()
     # post2_vaccination()
     # medical = get_medical_number(get_medical_data())
     # non_medical = get_non_medical_number(get_open_data())
