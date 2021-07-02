@@ -7,12 +7,13 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from urllib.request import urlretrieve
-from twitter_post import post, image_post
+from twitter_post import get_posts, post, image_post
 import aichi
 from twitter_text import parse_tweet
 from rt import rt_post
 from area_risk import image_file_name, generate_risk_map
 
+from utility import get_last_numbers_from_posts
 
 def multi_dirname(path, n):
     for _ in range(n):
@@ -57,9 +58,13 @@ def ranking_today():
 
             # デプロイ前にタイムデルタを消す
             # _name = str(datetime.today()).split()[0]
-            _name = str(datetime.today() - timedelta(days=1)).split()[0]
-            df_zentai = pandas.read_pickle(
-                os.path.join("data", f"{_name}_from_sum.zip"))
+            # _name = str(datetime.today() - timedelta(days=1)).split()[0]
+            # df_zentai = pandas.read_pickle(
+            #     os.path.join("data", f"{_name}_from_sum.zip"))
+            df_zentai = get_last_numbers_from_posts(get_posts(tweet_number=30), day_before=1)
+            df_zentai.pop("愛知県管轄")
+            df_zentai = pandas.DataFrame.from_dict(df_zentai, orient="index")
+            df_zentai.columns = ["本日"]  
 
             aichi_kobetsu = pandas.DataFrame(
                 collections.Counter(df_all["居住地"]).most_common())
