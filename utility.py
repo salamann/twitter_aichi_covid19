@@ -86,9 +86,9 @@ def convert_zenkaku(text):
     return text.translate(str.maketrans({chr(0xFF01 + i): chr(0x21 + i) for i in range(94)}))
 
 
-def get_last_numbers_from_posts(posts):
+def get_last_numbers_from_posts(posts, day_before=0):
     today_date = (datetime.today().astimezone(
-        timezone(timedelta(hours=9)))-timedelta(hours=6)).date()
+        timezone(timedelta(hours=9)))-timedelta(hours=6) - timedelta(days=day_before)).date()
     cities = ["名古屋市", "豊田市", "豊橋市", "岡崎市", "一宮市",
               "愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）"]
     res = {city: -1 for city in cities}
