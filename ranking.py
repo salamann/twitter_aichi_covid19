@@ -199,7 +199,7 @@ def update_database():
     # df01 = pandas.read_pickle("202012.zip")
     # df01 = pandas.read_pickle("202101.zip")
     # df01 = pandas.read_pickle(os.path.join("data", "202104.zip"))
-    df01 = pandas.read_pickle(os.path.join("data", "202105.zip"))
+    df01 = pandas.read_pickle(os.path.join("data", "202106.zip"))
     df02 = pandas.read_pickle(pdf_name)
     df03 = pandas.concat([df01, df02])
     df03.to_pickle("database.zip")
