@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 import pandas
 import pathlib
 from typing import Callable
+import re
 
 
 def generate_post(gov_info: dict) -> str:
@@ -83,6 +84,30 @@ def pre_post(city: str, zip_path: str, get_info: Callable, engine_number: int = 
 
 def convert_zenkaku(text):
     return text.translate(str.maketrans({chr(0xFF01 + i): chr(0x21 + i) for i in range(94)}))
+
+
+def get_last_numbers_from_posts(posts):
+    today_date = (datetime.today().astimezone(
+        timezone(timedelta(hours=9)))-timedelta(hours=6)).date()
+    cities = ["名古屋市", "豊田市", "豊橋市", "岡崎市", "一宮市",
+              "愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）"]
+    res = {city: -1 for city in cities}
+    for post in posts[::-1]:
+        date = datetime.strptime(
+            post['created_at'], "%a %b %d %H:%M:%S %z %Y") - timedelta(hours=6)
+        post_date = date.astimezone(timezone(timedelta(hours=9))).date()
+        if post_date == today_date:
+            for city in cities:
+                if f"{city}の本日" in post["text"]:
+                    pattern = r'.*?本日の新型コロナウイルスの新規感染者数は(\d+)人'
+
+                    # compile then match
+                    repatter = re.compile(pattern)
+                    result = repatter.match(post["text"])
+
+                    res[city] = int(result.group(1))
+    res["愛知県管轄"] = res.pop("愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）")
+    return res
 
 
 if __name__ == "__main__":
