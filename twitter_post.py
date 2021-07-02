@@ -2,7 +2,7 @@ import json
 from requests_oauthlib import OAuth1Session
 
 
-def get_posts() -> dict:
+def get_posts(tweet_number=20) -> dict:
     import config
     twitter_session = OAuth1Session(config.api_key,
                                     config.api_secret,
@@ -10,7 +10,7 @@ def get_posts() -> dict:
                                     config.access_token_secret)
     url = "https://api.twitter.com/1.1/statuses/user_timeline.json"  # タイムライン取得エンドポイント
 
-    params = {'count': 20}  # 取得数
+    params = {'count': tweet_number}  # 取得数
     res = twitter_session.get(url, params=params)
     timelines = json.loads(res.text)
     return timelines
