@@ -2,11 +2,13 @@ import re
 import urllib.parse
 from typing import Callable
 from datetime import datetime, timedelta, timezone
+import time
 
 import feedparser
 import pandas
 from bs4 import BeautifulSoup
 import requests
+
 
 def get_aichi_day_data_from_spreadsheet():
 
@@ -19,16 +21,18 @@ def get_aichi_day_data_from_spreadsheet():
     dfapi.index = dfapi.index.tz_convert('Asia/Tokyo')
     return dfapi
 
+
 def get_aichi_data_from_spreadsheet(day_before=0):
     dfapi = get_aichi_day_data_from_spreadsheet()
-    return dfapi.loc[str((datetime.today()-timedelta(days=day_before)).date()), :]
+    return dfapi.loc[str((datetime.today() - timedelta(days=day_before)).date()), :]
 
 
 def get_one_week_before():
     dfapi = get_aichi_data_from_spreadsheet(day_before=7)
     cities = ["名古屋市", "一宮市", "豊橋市", "豊田市", "岡崎市"]
     res = {city: dfapi[city] for city in cities}
-    res["愛知県管轄"] = dfapi.sum() - dfapi[cities].sum()
+    res["愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）"] = dfapi.sum() - \
+        dfapi[cities].sum()
     return res
 
 
@@ -316,7 +320,7 @@ def get_aichi_ken_info(engine_number=1):
             is_today = True
             break
     is_yesterday = False if is_today else False
-    
+
     if is_today:
         html = requests.get(article_url)
         soup = BeautifulSoup(html.content, "lxml")
@@ -345,7 +349,7 @@ def get_zentai_info(engine_number=1, numbers_from_tweets=None):
 
 def get_last_numbers_from_posts(posts):
     today_date = (datetime.today().astimezone(
-        timezone(timedelta(hours=9)))-timedelta(hours=6)).date()
+        timezone(timedelta(hours=9))) - timedelta(hours=6)).date()
     cities = ["名古屋市", "豊田市", "豊橋市", "岡崎市", "一宮市",
               "愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）"]
     res = {city: -1 for city in cities}
@@ -363,43 +367,49 @@ def get_last_numbers_from_posts(posts):
                     result = repatter.match(post["text"])
 
                     res[city] = int(result.group(1))
-    res["愛知県管轄"] = res.pop("愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）")
+    # res["愛知県管轄"] = res.pop("愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）")
     return res
 
 
 def post_cities():
-    from twitter_post import get_posts
+    from twitter_post import get_posts, post
     numbers_from_tweets = get_last_numbers_from_posts(get_posts())
 
-    # info = pre_post("岡崎市", get_okazaki_info)
-    # print(info)
-    # if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
-    #     print(info["headline"])
-
-    # info = pre_post("豊橋市", get_toyohashi_info)
-    # print(info)
-    # if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
-    #     print(info["headline"])
-
-    # info = pre_post("豊田市", get_toyota_info, engine_number=2)
-    # print(info)
-    # if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
-    #     print(info["headline"])
-
-    # info = pre_post("一宮市", get_ichinomiya_info)
-    # print(info)
-    # if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
-    #     print(info["headline"])
-
-    # info = pre_post("名古屋市", get_nagoya_info)
-    # print(info)
-    # if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
-    #     print(info["headline"])
-
-    info = pre_post("愛知県管轄", get_aichi_ken_info)
+    info = pre_post("岡崎市", get_okazaki_info)
     print(info)
     if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
-        print(info["headline"])
+        # print(info["headline"])
+        post(info["headline"])
+
+    info = pre_post("豊橋市", get_toyohashi_info)
+    print(info)
+    if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
+        # print(info["headline"])
+        post(info["headline"])
+
+    info = pre_post("豊田市", get_toyota_info, engine_number=2)
+    print(info)
+    if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
+        # print(info["headline"])
+        post(info["headline"])
+
+    info = pre_post("一宮市", get_ichinomiya_info)
+    print(info)
+    if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
+        # print(info["headline"])
+        post(info["headline"])
+
+    info = pre_post("名古屋市", get_nagoya_info)
+    print(info)
+    if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
+        # print(info["headline"])
+        post(info["headline"])
+
+    info = pre_post("愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）", get_aichi_ken_info)
+    print(info)
+    if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
+        # print(info["headline"])
+        post(info["headline"])
 
     # info_list = [info_okazaki, info_toyohashi, info_toyota,
     #              info_ichinomiya, info_nagoya, info_aichi_ken]
@@ -411,9 +421,11 @@ def post_cities():
     #         print(info["headline"])
     #     else:
     #         print("Not postable", info['city'])
+    time.sleep(20)
+    numbers_from_tweets = get_last_numbers_from_posts(get_posts())
     info_zentai = pre_post_zentai(get_zentai_info, numbers_from_tweets)
     print("-------------全体-------------")
-    print(info_zentai)
+    post(info_zentai["headline"])
 
 
 if __name__ == "__main__":
@@ -424,7 +436,7 @@ if __name__ == "__main__":
     # print(pre_post("名古屋市", get_nagoya_info))
     # print(pre_post("愛知県管轄", get_aichi_ken_info))
     # post_cities()
-    post_cities()
+    # post_cities()
     # from for_cloud_function import get_posts
     # print(get_last_numbers_from_posts(get_posts()))
     pass
