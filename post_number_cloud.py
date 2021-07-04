@@ -376,40 +376,70 @@ def post_cities():
     numbers_from_tweets = get_last_numbers_from_posts(get_posts())
 
     info = pre_post("岡崎市", get_okazaki_info)
-    print(info)
+    # print(info)
     if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
         # print(info["headline"])
         post(info["headline"])
+    else:
+        print(info["city"],
+              info["is_postable"],
+              numbers_from_tweets[info["city"]],
+              info["number_today"])
 
     info = pre_post("豊橋市", get_toyohashi_info)
-    print(info)
+    # print(info)
     if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
         # print(info["headline"])
         post(info["headline"])
+    else:
+        print(info["city"],
+              info["is_postable"],
+              numbers_from_tweets[info["city"]],
+              info["number_today"])
 
     info = pre_post("豊田市", get_toyota_info, engine_number=2)
-    print(info)
+    # print(info)
     if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
         # print(info["headline"])
         post(info["headline"])
+    else:
+        print(info["city"],
+              info["is_postable"],
+              numbers_from_tweets[info["city"]],
+              info["number_today"])
 
     info = pre_post("一宮市", get_ichinomiya_info)
-    print(info)
+    # print(info)
     if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
         # print(info["headline"])
         post(info["headline"])
+    else:
+        print(info["city"],
+              info["is_postable"],
+              numbers_from_tweets[info["city"]],
+              info["number_today"])
 
     info = pre_post("名古屋市", get_nagoya_info)
-    print(info)
+    # print(info)
     if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
         # print(info["headline"])
         post(info["headline"])
+    else:
+        print(info["city"],
+              info["is_postable"],
+              numbers_from_tweets[info["city"]],
+              info["number_today"])
 
     info = pre_post("愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）", get_aichi_ken_info)
-    print(info)
+    # print(info)
     if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
         # print(info["headline"])
         post(info["headline"])
+    else:
+        print(info["city"],
+              info["is_postable"],
+              numbers_from_tweets[info["city"]],
+              info["number_today"])
 
     # info_list = [info_okazaki, info_toyohashi, info_toyota,
     #              info_ichinomiya, info_nagoya, info_aichi_ken]
@@ -423,9 +453,17 @@ def post_cities():
     #         print("Not postable", info['city'])
     time.sleep(20)
     numbers_from_tweets = get_last_numbers_from_posts(get_posts())
-    info_zentai = pre_post_zentai(get_zentai_info, numbers_from_tweets)
+    info = pre_post_zentai(get_zentai_info, numbers_from_tweets)
     print("-------------全体-------------")
-    post(info_zentai["headline"])
+    # post(info_zentai["headline"])
+    if (info["is_postable"]) & (sum(numbers_from_tweets.values()) < info["number_today"]):
+        # print(info["headline"])
+        post(info["headline"])
+    else:
+        print(info["city"],
+              info["is_postable"],
+              sum(numbers_from_tweets.values()),
+              info["number_today"])
 
 
 if __name__ == "__main__":
@@ -436,7 +474,7 @@ if __name__ == "__main__":
     # print(pre_post("名古屋市", get_nagoya_info))
     # print(pre_post("愛知県管轄", get_aichi_ken_info))
     # post_cities()
-    # post_cities()
+    post_cities()
     # from for_cloud_function import get_posts
     # print(get_last_numbers_from_posts(get_posts()))
     pass
