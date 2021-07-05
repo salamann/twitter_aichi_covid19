@@ -340,9 +340,11 @@ def get_aichi_ken_info(engine_number=1):
 
 def get_zentai_info(engine_number=1, numbers_from_tweets=None):
     if numbers_from_tweets is not None:
+        _number = numbers_from_tweets.pop("愛知県全体")
         is_today = all(True if value != -
                        1 else False for value in numbers_from_tweets.values())
         today_number = sum(numbers_from_tweets.values())
+        numbers_from_tweets["愛知県全体"] = _number
         load_url = 'https://www.pref.aichi.jp/site/covid19-aichi/'
         return {"is_today": is_today, "number": today_number, "url": load_url}
 
@@ -351,7 +353,8 @@ def get_last_numbers_from_posts(posts):
     today_date = (datetime.today().astimezone(
         timezone(timedelta(hours=9))) - timedelta(hours=6)).date()
     cities = ["名古屋市", "豊田市", "豊橋市", "岡崎市", "一宮市",
-              "愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）"]
+              "愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）",
+              "愛知県全体"]
     res = {city: -1 for city in cities}
     for post in posts[::-1]:
         date = datetime.strptime(
@@ -456,13 +459,13 @@ def post_cities():
     info = pre_post_zentai(get_zentai_info, numbers_from_tweets)
     print("-------------全体-------------")
     # post(info_zentai["headline"])
-    if (info["is_postable"]) & (sum(numbers_from_tweets.values()) < info["number_today"]):
+    if (info["is_postable"]) & (numbers_from_tweets[info["city"]] < info["number_today"]):
         # print(info["headline"])
         post(info["headline"])
     else:
         print(info["city"],
               info["is_postable"],
-              sum(numbers_from_tweets.values()),
+              numbers_from_tweets[info["city"]],
               info["number_today"])
 
 
