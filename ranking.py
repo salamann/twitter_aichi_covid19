@@ -3,6 +3,7 @@ import pandas
 import collections
 from datetime import datetime, timedelta
 import os
+import re
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
@@ -14,6 +15,7 @@ from rt import rt_post
 from area_risk import image_file_name, generate_risk_map
 
 from utility import get_last_numbers_from_posts
+
 
 def multi_dirname(path, n):
     for _ in range(n):
@@ -61,10 +63,11 @@ def ranking_today():
             # _name = str(datetime.today() - timedelta(days=1)).split()[0]
             # df_zentai = pandas.read_pickle(
             #     os.path.join("data", f"{_name}_from_sum.zip"))
-            df_zentai = get_last_numbers_from_posts(get_posts(tweet_number=30), day_before=1)
+            df_zentai = get_last_numbers_from_posts(
+                get_posts(tweet_number=30), day_before=1)
             df_zentai.pop("愛知県管轄")
             df_zentai = pandas.DataFrame.from_dict(df_zentai, orient="index")
-            df_zentai.columns = ["本日"]  
+            df_zentai.columns = ["本日"]
 
             aichi_kobetsu = pandas.DataFrame(
                 collections.Counter(df_all["居住地"]).most_common())
@@ -187,8 +190,9 @@ def update_database():
     # [nspan] = [num for num, _ in enumerate(
     #     soup.find_all("span")) if "愛知県内の発生事例" in _.text]
     # pdf_url = soup.find_all("span")[nspan+1].find("a")["href"]
+    texts = "愛知県内の感染者の発生事例|愛知県内の発生事例"
     for p in soup.find_all("p"):
-        if "愛知県内の発生事例" in p.text:
+        if len(re.findall(texts, p.text)) > 0:
             pdf_url = p.next_sibling()[0]["href"]
             # pdf_url = p.find("a")["href"]
     pdf_url = urljoin(os.path.dirname(os.path.dirname(load_url)), pdf_url)
@@ -211,10 +215,10 @@ def update_database():
 
 
 if __name__ == "__main__":
-    try:
-        ranking_today()
-    except:
-        pass
+    # try:
+    #     ranking_today()
+    # except:
+    #     pass
     update_database()
     ranking_week()
     ranking_week_area()
