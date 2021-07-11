@@ -29,11 +29,11 @@ def ranking_today():
 
         # デプロイ前にタイムデルタを取る
         # today = (datetime.today()).strftime('%Y年%-m月%-d日')
-        today = (datetime.today() - timedelta(days=1)).strftime('%Y年%-m月%-d日')
+        today = (datetime.today() - timedelta(days=1)).strftime('%Y年%#m月%#d日')
 
         url_flake = ""
         for li in soup.find(class_="list_ccc").find_all("li"):
-            if (today in li.text) & ("感染症患者の発生" in li.text) & ("愛知県職員における" not in li.text):
+            if (today in li.text) & ("感染者の発生" in li.text) & ("愛知県職員における" not in li.text):
                 url_flake = li.find("a")["href"]
         if url_flake != "":
             today_url = urljoin(multi_dirname(press_url, 3), url_flake)
