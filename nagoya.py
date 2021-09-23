@@ -37,6 +37,16 @@ def get_nagoya_info(engine_number=1):
     result = repatter.match(text_line.text)
 
     today_number = int(result.group(1))
+
+    if "," in text_line.text:
+        pattern = r'.*?(\d+),(\d+)例'
+
+        # compile then match
+        repatter = re.compile(pattern)
+        result = repatter.match(text_line.text)
+
+        today_number = int(result.group(1) + result.group(2))
+
     return {"is_today": is_today, "is_yesterday": is_yesterday, "number": today_number, "url": detailed_url}
 
 
