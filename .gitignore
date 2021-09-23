@@ -160,3 +160,7 @@ summary_by_prefecture.csv
 vac_number_latest.txt
 Untitled1.ipynb
 config.py
+html/*
+*_cut.pdf
+*_cut.zip
+.vscode/*
