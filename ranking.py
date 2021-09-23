@@ -12,15 +12,132 @@ from twitter_post import get_posts, post, image_post
 import aichi
 from twitter_text import parse_tweet
 from rt import rt_post
-from area_risk import image_file_name, generate_risk_map
+from area_risk import image_file_name, generate_risk_map, create_df_per_capita
 
-from utility import get_last_numbers_from_posts
+from utility import get_last_numbers_from_posts, get_speadsheet_data
 
 
 def multi_dirname(path, n):
     for _ in range(n):
         path = os.path.dirname(path)
     return path
+
+
+def count_twitter(text):
+    import unicodedata
+    ans = 0
+    for string in text:
+        judged = unicodedata.east_asian_width(string)
+        if judged in ["F", "W"]:
+            ans += 2
+        else:
+            ans += 1
+    return ans
+
+
+def ranking_today2():
+    df = get_speadsheet_data()
+    rank = 0
+    ranking = "昨日の新型コロナウイルス感染者数ランキング\n"
+    is_same = False
+    current_num = -1
+    yesterday = str((datetime.today() - timedelta(days=1)).date())
+
+    for city, num in df.loc[yesterday].sort_values(ascending=False).to_dict().items():
+        if current_num == num:
+            is_same = True
+        else:
+            ranking += "\n"
+            rank += 1
+            is_same = False
+        if not is_same:
+            if count_twitter(ranking) >= 230:
+                ranking += f"(以下 https://narumi-midori.net/twitter_aichi_covid19/{yesterday}.html)"
+                break
+            else:
+                ranking += f"{rank}位 {num}人 {city}"
+                current_num = num
+        else:
+            if count_twitter(ranking) >= 230:
+                ranking += f"(以下 https://narumi-midori.net/twitter_aichi_covid19/{yesterday}.html)"
+                break
+            else:
+                ranking += f", {city}"
+    post(ranking)
+
+    return ranking
+
+
+def ranking_week2():
+    data = get_speadsheet_data()
+    rank = 0
+    ranking = "昨日まで直近1週間の新型コロナウイルス感染者数ランキング\n"
+    is_same = False
+    current_num = -1
+    yesterday = str((datetime.today() - timedelta(days=1)).date())
+
+    df = pandas.DataFrame([])
+    indices = data.index.sort_values(ascending=False)
+    for num in range(len(indices) - 6):
+        df1 = data.loc[indices[num:num + 7], :].sum().to_frame().transpose()
+        df1.index = [indices[num]]
+        df = pandas.concat([df, df1])
+
+    for city, num in df.loc[yesterday].loc[yesterday].sort_values(ascending=False).to_dict().items():
+        if current_num == num:
+            is_same = True
+        else:
+            ranking += "\n"
+            rank += 1
+            is_same = False
+        if not is_same:
+            if count_twitter(ranking) >= 230:
+                ranking += f"(以下 https://narumi-midori.net/twitter_aichi_covid19/{yesterday}_week.html)"
+                break
+            else:
+                ranking += f"{rank}位 {num}人 {city}"
+                current_num = num
+        else:
+            if count_twitter(ranking) >= 230:
+                ranking += f"(以下 https://narumi-midori.net/twitter_aichi_covid19/{yesterday}_week.html)"
+                break
+            else:
+                ranking += f", {city}"
+    post(ranking)
+
+    return ranking
+
+
+def ranking_week_area2():
+    data = create_df_per_capita(get_speadsheet_data())
+
+    yesterday = str((datetime.today() - timedelta(days=1)).date())
+    today_data = data.loc[yesterday].loc[yesterday].sort_values(
+        ascending=False)
+
+    ranking_text = "愛知県新型コロナ危険エリアランキング（昨日まで直近1週間の10万人あたり新型コロナウイルス感染者数）\n"
+    rank = 0
+    num_prior = 0
+    for city, num in today_data.items():
+        if num == num_prior:
+            if parse_tweet(ranking_text).weightedLength > 230:
+                ranking_text += f"(以下 https://narumi-midori.net/twitter_aichi_covid19/{yesterday}_area.html)"
+                break
+            else:
+                ranking_text += f", {city}"
+        else:
+            if parse_tweet(ranking_text).weightedLength > 230:
+                ranking_text += f"(以下 https://narumi-midori.net/twitter_aichi_covid19/{yesterday}_area.html)"
+                break
+            else:
+                rank += 1
+                ranking_text += f"\n{rank}位 {num}人: {city}"
+        num_prior = num * 1
+
+    generate_risk_map()
+    # post(ranking_text)
+    image_post(image_file_name, ranking_text)
+    return ranking_text
 
 
 def ranking_today():
@@ -31,7 +148,8 @@ def ranking_today():
 
         # デプロイ前にタイムデルタを取る
         # today = (datetime.today()).strftime('%Y年%-m月%-d日')
-        today = (datetime.today() - timedelta(days=1)).strftime('%Y年%#m月%#d日')
+        today = (datetime.today() - timedelta(days=1) -
+                 timedelta(hours=6)).strftime('%Y年%-m月%-d日')
 
         url_flake = ""
         for li in soup.find(class_="list_ccc").find_all("li"):
@@ -44,7 +162,7 @@ def ranking_today():
             pdf_url = urljoin(multi_dirname(press_url, 3), soup.find(
                 class_="detail_free").find("a")["href"])
             pdf_file_path = os.path.join(
-                "data", f"{str(datetime.today()).split()[0]}_aichi.pdf")
+                "data", f"{str(datetime.today()-timedelta(hours=6)).split()[0]}_aichi.pdf")
             urlretrieve(pdf_url, pdf_file_path)
 
             tbls = camelot.read_pdf(pdf_file_path, pages='1-end')
@@ -78,16 +196,19 @@ def ranking_today():
             ranking_text = "昨日の新型コロナウイルス感染者数ランキング\n"
             rank = 0
             num_prior = 0
+            yesterday = datetime.today() - timedelta(days=1)
             for city, num in zip(aichi_total.index, aichi_total["本日"]):
                 if num == num_prior:
-                    if parse_tweet(ranking_text).weightedLength > 258:
-                        ranking_text += "(以下略)"
+                    if parse_tweet(ranking_text).weightedLength > 233:
+                        # if parse_tweet(ranking_text).weightedLength > 258:
+                        ranking_text += f"(以下 https://narumi-midori.net/twitter_aichi_covid19/{str(yesterday.date())}.html)"
                         break
                     else:
                         ranking_text += f", {city}"
                 else:
-                    if parse_tweet(ranking_text).weightedLength > 251:
-                        ranking_text += "(以下略)"
+                    if parse_tweet(ranking_text).weightedLength > 226:
+                        # if parse_tweet(ranking_text).weightedLength > 251:
+                        ranking_text += f"(以下 https://narumi-midori.net/twitter_aichi_covid19/{str(yesterday.date())}.html)"
                         break
                     else:
                         rank += 1
@@ -105,7 +226,7 @@ def ranking_week():
         this_mo = pandas.read_pickle("database.zip")
         # this_mo = pandas.read_pickle(f"{os.path.splitext(pdf_name)[0]}.zip")
         this_week = this_mo[this_mo["発表日"] >=
-                            datetime.today() - timedelta(days=8)]
+                            datetime.today() - timedelta(days=8) - timedelta(hours=6)]
         pd_week = pandas.DataFrame(
             collections.Counter(this_week["住居地"]).most_common())
         pd_week[0] = [_.replace("⻄", "西") for _ in pd_week[0]]
@@ -113,16 +234,20 @@ def ranking_week():
         ranking_text = "昨日まで直近1週間の新型コロナウイルス感染者数ランキング\n"
         rank = 0
         num_prior = 0
+        yesterday = datetime.today() - timedelta(days=1)
+
         for city, num in zip(pd_week[0], pd_week[1]):
             if num == num_prior:
-                if parse_tweet(ranking_text).weightedLength > 258:
-                    ranking_text += "(以下略)"
+                # if parse_tweet(ranking_text).weightedLength > 258:
+                if parse_tweet(ranking_text).weightedLength > 223:
+                    ranking_text += f"(以下 https://narumi-midori.net/twitter_aichi_covid19/{str(yesterday.date())}_week.html)"
                     break
                 else:
                     ranking_text += f", {city}"
             else:
-                if parse_tweet(ranking_text).weightedLength > 252:
-                    ranking_text += "(以下略)"
+                # if parse_tweet(ranking_text).weightedLength > 252:
+                if parse_tweet(ranking_text).weightedLength > 227:
+                    ranking_text += f"(以下 https://narumi-midori.net/twitter_aichi_covid19/{str(yesterday.date())}_week.html)"
                     break
                 else:
                     rank += 1
@@ -139,7 +264,8 @@ def ranking_week_area():
     pops = pandas.read_pickle("population.zip")
     this_mo = pandas.read_pickle("database.zip")
 
-    this_week = this_mo[this_mo["発表日"] >= datetime.today() - timedelta(days=8)]
+    this_week = this_mo[this_mo["発表日"] >= datetime.today(
+    ) - timedelta(days=8) - timedelta(hours=6)]
     pd_week = pandas.DataFrame(
         collections.Counter(this_week["住居地"]).most_common())
     pd_week[0] = [_.replace("⻄", "西").replace(
@@ -193,33 +319,50 @@ def update_database():
     texts = "愛知県内の感染者の発生事例|愛知県内の発生事例"
     for p in soup.find_all("p"):
         if len(re.findall(texts, p.text)) > 0:
-            pdf_url = p.next_sibling()[0]["href"]
+            try:
+                pdf_url = p.next_sibling()[0]["href"]
+            except KeyError:
+                pdf_url = p.find("a").attrs["href"]
             # pdf_url = p.find("a")["href"]
     pdf_url = urljoin(os.path.dirname(os.path.dirname(load_url)), pdf_url)
-    pdf_name = os.path.join("data", str(datetime.today()).split()[
+    pdf_name = os.path.join("data", str(datetime.today() - timedelta(hours=6)).split()[
                             0].replace("-", "") + ".pdf")
     urlretrieve(pdf_url, pdf_name)
 
     aichi.generate_df_from_aichi(pdf_name)
     # update_database()
 
-    pdf_name = os.path.join("data", str(datetime.today()).split()[
+    pdf_name = os.path.join("data", str(datetime.today() - timedelta(hours=6)).split()[
                             0].replace("-", "") + ".zip")
     # df01 = pandas.read_pickle("202012.zip")
     # df01 = pandas.read_pickle("202101.zip")
     # df01 = pandas.read_pickle(os.path.join("data", "202104.zip"))
-    df01 = pandas.read_pickle(os.path.join("data", "202106.zip"))
+    # df01 = pandas.read_pickle(os.path.join("data", "202106.zip"))
+    # df01 = pandas.read_pickle(os.path.join("data", "202107.zip"))
+    df01 = pandas.read_pickle(os.path.join("data", "202108.zip"))
     df02 = pandas.read_pickle(pdf_name)
     df03 = pandas.concat([df01, df02])
     df03.to_pickle("database.zip")
 
 
 if __name__ == "__main__":
+
     # try:
-    #     ranking_today()
+    from update_spreadsheet import main
+    main()
+    from html_gen import html_main
+    html_main()
+    # ranking_today()
+    ranking_today2()
+    ranking_week2()
+    ranking_week_area2()
     # except:
     #     pass
     update_database()
-    ranking_week()
-    ranking_week_area()
+    # ranking_week()
     rt_post()
+
+    # ranking_today2()
+    # print(ranking_week2())
+    # print(count_twitter("愛知県の1位\n愛媛 \n"))
+    # print(ranking_week_area2())
