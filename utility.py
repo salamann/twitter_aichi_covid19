@@ -6,6 +6,21 @@ from typing import Callable
 import re
 
 
+def get_speadsheet_data():
+    import pandas
+    import requests
+
+    from config import spreadsheet_url
+
+    response = requests.get(spreadsheet_url)
+    dfapi = pandas.DataFrame(response.json())
+    dfapi["日付"] = pandas.to_datetime(dfapi["日付"])
+    dfapi = dfapi.set_index("日付")
+
+    dfapi.index = dfapi.index.tz_convert('Asia/Tokyo')
+    return dfapi
+
+
 def generate_post(gov_info: dict) -> str:
     num_last_week = gov_info["number_last_week"]
     num_today = gov_info["number_today"]
@@ -88,7 +103,7 @@ def convert_zenkaku(text):
 
 def get_last_numbers_from_posts(posts, day_before=0):
     today_date = (datetime.today().astimezone(
-        timezone(timedelta(hours=9)))-timedelta(hours=6) - timedelta(days=day_before)).date()
+        timezone(timedelta(hours=9))) - timedelta(hours=6) - timedelta(days=day_before)).date()
     cities = ["名古屋市", "豊田市", "豊橋市", "岡崎市", "一宮市",
               "愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）"]
     res = {city: -1 for city in cities}
