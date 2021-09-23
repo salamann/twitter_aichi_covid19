@@ -1,10 +1,11 @@
 import pandas
 from collections import Counter
-from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import matplotlib
 import os
 from twitter_post import image_post
+from utility import get_speadsheet_data
+from datetime import datetime, timedelta, timezone
 
 
 def generate_rt(city, df):
@@ -35,18 +36,56 @@ def generate_rt(city, df):
     return rts
 
 
-def generate_rt_image_and_message():
-    df = pandas.read_pickle("database.zip")
-    large_cities = Counter(df["住居地"]).most_common()[:5]
-
-    for num, [city, _] in enumerate(large_cities):
-        if num == 0:
-            rts = generate_rt(city, df)
+def get_city_num(data, city):
+    span = 30
+    data_city = {"days": [], "numbers": []}
+    for days_before in range(1, span+1):
+        day = (datetime.today() - timedelta(days=days_before)
+               ).astimezone(timezone(timedelta(hours=9)))
+        day_before_week = (datetime.today(
+        ) - timedelta(days=days_before+7)).astimezone(timezone(timedelta(hours=9)))
+        if city != "愛知県全体":
+            number_of_day = data.loc[day_before_week:day, city].sum()
         else:
-            rts.update(generate_rt(city, df))
-    rts.update(generate_rt("愛知県全体", df))
+            number_of_day = data.loc[day_before_week:day, :].sum().sum()
+        data_city["days"].append(day.date())
+        data_city["numbers"].append(number_of_day)
+    return pandas.DataFrame(data_city).set_index("days")
 
-    nagoya = pandas.DataFrame(rts).sort_values("days").set_index("days")
+
+def calculate_rt(df: pandas.DataFrame):
+    rts = {"days": [], "rt": []}
+    for day in df.index[:-7]:
+        rt = (df.loc[day, "numbers"] / df.loc[day -
+              timedelta(days=7), "numbers"])**(5 / 7)
+        rts["days"].append(day)
+        rts["rt"].append(rt)
+    return pandas.DataFrame(rts).set_index("days")
+
+
+def generate_rts():
+    data = get_speadsheet_data()
+    cities = ["名古屋市", "豊田市", "豊橋市", "岡崎市", "一宮市", "愛知県全体"]
+
+    df6 = pandas.DataFrame()
+    for city in cities:
+        df6[city] = calculate_rt(get_city_num(data, city)).loc[:, "rt"]
+    return df6.sort_index()
+
+
+def generate_rt_image_and_message():
+    # df = pandas.read_pickle("database.zip")
+    # large_cities = Counter(df["住居地"]).most_common()[:5]
+
+    # for num, [city, _] in enumerate(large_cities):
+    #     if num == 0:
+    #         rts = generate_rt(city, df)
+    #     else:
+    #         rts.update(generate_rt(city, df))
+    # rts.update(generate_rt("愛知県全体", df))
+
+    # nagoya = pandas.DataFrame(rts).sort_values("days").set_index("days")
+    nagoya = generate_rts()
     plt.rcParams['figure.subplot.bottom'] = 0.18
     matplotlib.rc('font', family='Noto Sans CJK JP')
     markers = ["o", ">", "<", "^", "s", "*"]
@@ -62,10 +101,11 @@ def generate_rt_image_and_message():
 
     plt.plot([nagoya.index[0], nagoya.index[-1]], [1, 1], "k--")
     plt.xlim(nagoya.index[0], nagoya.index[-1])
-    plt.grid()
+    plt.grid(ls=":")
     plt.legend(loc="upper left")
     plt.ylabel("Rt")
-    plt.xticks(rotation=30)
+    plt.yticks(fontsize="small")
+    plt.xticks(nagoya.index, rotation=45, fontsize="small", ha="right")
     plt.suptitle(
         f"""愛知県の実効再生産数(Rt)の推移
 (主要市および県全体, {str(datetime.today().date())}現在)""", )
