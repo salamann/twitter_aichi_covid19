@@ -49,13 +49,21 @@ def generate_rt_image_and_message():
     nagoya = pandas.DataFrame(rts).sort_values("days").set_index("days")
     plt.rcParams['figure.subplot.bottom'] = 0.18
     matplotlib.rc('font', family='Noto Sans CJK JP')
-    for city in nagoya.keys():
+    markers = ["o", ">", "<", "^", "s", "*"]
+    for city, marker in zip(nagoya.keys(), markers):
+        if city in ["愛知県全体", "名古屋市"]:
+            linewidth = 2
+            marker_size = 4
+        else:
+            linewidth = 1
+            marker_size = 2
         plt.plot(nagoya.index, nagoya[city],
-                 label=city, ls="-", marker="o", ms=2, lw=1)
+                 label=city, ls="-", marker=marker, ms=marker_size, lw=linewidth)
 
     plt.plot([nagoya.index[0], nagoya.index[-1]], [1, 1], "k--")
+    plt.xlim(nagoya.index[0], nagoya.index[-1])
     plt.grid()
-    plt.legend()
+    plt.legend(loc="upper left")
     plt.ylabel("Rt")
     plt.xticks(rotation=30)
     plt.suptitle(
@@ -63,17 +71,19 @@ def generate_rt_image_and_message():
 (主要市および県全体, {str(datetime.today().date())}現在)""", )
     file_name = os.path.join(
         "data", "rt" + str(datetime.today().date()).replace(":", "") + ".png")
-
-    plt.text(plt.gca().get_xlim()[0] - 2,
-             plt.gca().get_ylim()[0] - 0.5,
-             """@AichiCovid19
-
-データ元
-感染者数：愛知県新型コロナウイルス感染症対策サイト(https://www.pref.aichi.jp/site/covid19-aichi/)
-実効再生産数の計算方法：Real-time estimation of the effective reproduction number of COVID-19 in Japan (https://github.com/contactmodel/COVID19-Japan-Reff)
+    ylims = plt.gca().get_ylim()
+    # y_position = ylims[0] - (ylims[1] - ylims[0]) / 8 * 2
+    plt.text(plt.gca().get_xlim()[1] + 0.1,
+             ylims[0],
+             """@AichiCovid19 - データ元
+感染者数：愛知県新型コロナウイルス感染症対策サイト
+    (https://www.pref.aichi.jp/site/covid19-aichi/)
+実効再生産数の計算方法：Real-time estimation of the effective reproduction number of COVID-19 in Japan 
+    (https://github.com/contactmodel/COVID19-Japan-Reff)
 平均世代時間は5日、報告間隔は7日と仮定
 """,
-             fontsize=5, verticalalignment="top")
+             fontsize=5, verticalalignment="bottom", horizontalalignment="left", rotation=90)
+    # print(y_position, ylims)
     plt.savefig(file_name, facecolor="w", dpi=200)
     plt.close()
 
