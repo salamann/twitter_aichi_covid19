@@ -358,7 +358,7 @@ if __name__ == "__main__":
     ranking_week_area2()
     # except:
     #     pass
-    update_database()
+    # update_database()
     # ranking_week()
     rt_post()
 

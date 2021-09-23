@@ -1,5 +1,5 @@
 from datetime import datetime
-from post_number_cloud import post_cities
+# from post_number_cloud import post_cities
 # import aichi
 # import ichinomiya
 # import nagoya
@@ -23,7 +23,7 @@ from post_number_cloud import post_cities
 # aichi.post_aichi()
 # aichi.post_zentai()
 
-post_cities()
+# post_cities()
 
 print(f"checked.. {datetime.today()}")
 with open("checked.txt", mode="a", encoding="utf-8") as f:

@@ -204,7 +204,6 @@ def get_yesterday_number():
 def main():
     pdf = download_today_data()
     yesterday_number = get_yesterday_number()
-    # yesterday_number = 855
     pdf2 = cut_pdf(yesterday_number + 200, pdf)
     zip_name = generate_df_from_aichi(pdf2)
     df0 = populate_sheet(zip_name)

@@ -1,5 +1,4 @@
 import pandas
-from collections import Counter
 import matplotlib.pyplot as plt
 import matplotlib
 import os
@@ -8,42 +7,14 @@ from utility import get_speadsheet_data
 from datetime import datetime, timedelta, timezone
 
 
-def generate_rt(city, df):
-    nums = {"days": [], city: []}
-    for days_before in range(1, 41):
-        cond = (datetime.today() - timedelta(days=days_before + 8) < df["発表日"])
-        cond &= (datetime.today() -
-                 timedelta(days=days_before + 1) >= df["発表日"])
-
-        if city != "愛知県全体":
-            cond &= (df["住居地"] == city)
-        nums["days"].append(datetime.today().date() -
-                            timedelta(days=days_before))
-        nums[city].append(len(df[cond]))
-
-    df2 = pandas.DataFrame(nums)
-    df2 = df2.set_index("days")
-    rts = {"days": [], city: []}
-    for days_before2 in range(1, 21):
-        num_day = df2.loc[datetime.today().date(
-        ) - timedelta(days=days_before2), city]
-        num_day_1week_bef = df2.loc[datetime.today(
-        ).date() - timedelta(days=days_before2 + 7), city]
-        rt = (num_day / num_day_1week_bef)**(5 / 7)
-        rts["days"].append(datetime.today().date() -
-                           timedelta(days=days_before2))
-        rts[city].append(rt)
-    return rts
-
-
 def get_city_num(data, city):
     span = 30
     data_city = {"days": [], "numbers": []}
-    for days_before in range(1, span+1):
+    for days_before in range(1, span + 1):
         day = (datetime.today() - timedelta(days=days_before)
                ).astimezone(timezone(timedelta(hours=9)))
         day_before_week = (datetime.today(
-        ) - timedelta(days=days_before+7)).astimezone(timezone(timedelta(hours=9)))
+        ) - timedelta(days=days_before + 7)).astimezone(timezone(timedelta(hours=9)))
         if city != "愛知県全体":
             number_of_day = data.loc[day_before_week:day, city].sum()
         else:
@@ -57,7 +28,7 @@ def calculate_rt(df: pandas.DataFrame):
     rts = {"days": [], "rt": []}
     for day in df.index[:-7]:
         rt = (df.loc[day, "numbers"] / df.loc[day -
-              timedelta(days=7), "numbers"])**(5 / 7)
+                                              timedelta(days=7), "numbers"])**(5 / 7)
         rts["days"].append(day)
         rts["rt"].append(rt)
     return pandas.DataFrame(rts).set_index("days")
@@ -74,17 +45,6 @@ def generate_rts():
 
 
 def generate_rt_image_and_message():
-    # df = pandas.read_pickle("database.zip")
-    # large_cities = Counter(df["住居地"]).most_common()[:5]
-
-    # for num, [city, _] in enumerate(large_cities):
-    #     if num == 0:
-    #         rts = generate_rt(city, df)
-    #     else:
-    #         rts.update(generate_rt(city, df))
-    # rts.update(generate_rt("愛知県全体", df))
-
-    # nagoya = pandas.DataFrame(rts).sort_values("days").set_index("days")
     nagoya = generate_rts()
     plt.rcParams['figure.subplot.bottom'] = 0.18
     matplotlib.rc('font', family='Noto Sans CJK JP')
