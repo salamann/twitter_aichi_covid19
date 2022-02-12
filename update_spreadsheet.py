@@ -8,8 +8,9 @@ from urllib.request import urlretrieve
 import os
 from datetime import datetime, timedelta, timezone
 import camelot
-import copy
 import json
+from math import ceil
+import pickle
 
 
 def download_today_data():
@@ -31,123 +32,120 @@ def download_today_data():
 
 
 def cut_pdf(number, pdf_name, page_plus=0):
-    from math import ceil
     page = ceil(number / 47) + 1 + page_plus
+
+    pdf_read = PyPDF2.PdfFileReader(pdf_name)
+    num_page = pdf_read.numPages
+    if page >= num_page:
+        page = num_page
+
     merger = PyPDF2.PdfFileMerger()
 
     merger.append(pdf_name, pages=PyPDF2.pagerange.PageRange(f'{-page}:'))
 
-    merger.write(f'{pdf_name}_cut.pdf')
+    merger.write(f'{pdf_name[:-4]}_cut.pdf')
     merger.close()
-    return f'{pdf_name}_cut.pdf'
+    return f'{pdf_name[:-4]}_cut.pdf'
 
 
-def generate_df_from_aichi(pdf_file_path):
+def generate_df_from_aichi(pdf_file_path: str, is_debug=False) -> pandas.DataFrame:
     print(f"generating {pdf_file_path}")
 
-    pdf_read = PyPDF2.PdfFileReader(pdf_file_path, strict=False)
-    num_page = pdf_read.numPages
+    def set_columns_by_first_row(data_frame: pandas.DataFrame) -> pandas.DataFrame:
+        data_frame.columns = data_frame.iloc[0, :]
+        return data_frame.iloc[1:, :].copy()
 
-    if num_page > 10:
-        page_list = list(range(10, num_page, 10))
-    else:
-        page_list = [num_page]
-    init = 1
-    dfs_lap = []
-    import time
-    time1 = time.time()
-    for num in page_list:
-        if num == page_list[-1]:
-            num = "end"
-        tbls = camelot.read_pdf(pdf_file_path, pages=f'{init}-{num}')
-        if num != "end":
-            init = num + 1
+    def refine_date(data_frame: pandas.DataFrame) -> pandas.DataFrame:
+        data_frame.loc[:, '発表日'] = [
+            _.split("日")[0] + "日" for _ in data_frame['発表日'].to_list()]
+        return data_frame
 
+    def set_new_columns_for_pending_nagoya(data_frame: pandas.DataFrame) -> pandas.DataFrame:
+        new_columns = []
+        for _column in data_frame.columns:
+            new_columns += [_ for _ in _column.split("\n") if _ != ""]
+        if len(data_frame.columns) == 7:
+            # when number of columns is correct (7)
+            data_frame.columns = new_columns
+            return data_frame
+        else:
+            # when number of column is less than 7
+            new_dict = {}
+            for _column in new_columns:
+                if _column in data_frame.columns:
+                    new_dict[_column] = data_frame.loc[:, _column].to_list()
+                else:
+                    new_dict[_column] = [None] * len(data_frame.index)
+            return pandas.DataFrame(new_dict)
+
+    def set_city_when_city_is_blank(data_frame: pandas.DataFrame) -> pandas.DataFrame:
+        new_city = []
+        for old_city, note in zip(data_frame['住居地'].to_list(), data_frame['備考'].to_list()):
+            if old_city in ["-", "ー", "", None]:
+                new_city.append(note.split("発表")[0])
+            else:
+                new_city.append(old_city)
+        data_frame.loc[:, '住居地'] = new_city
+        return data_frame
+
+    def city_name_correction(data_frame: pandas.DataFrame) -> pandas.DataFrame:
+        corrected_city = list()
+        cities = {"⻑久⼿市": "長久手市", "⻄尾市": "西尾市", "瀬⼾市": "瀬戸市", "愛⻄市": "愛西市"}
+        for city in data_frame["住居地"].to_list():
+            if city in cities.keys():
+                corrected_city.append(cities[city])
+            else:
+                corrected_city.append(city)
+        data_frame.loc[:, "住居地"] = corrected_city
+        return data_frame
+
+    def set_index(data_frame: pandas.DataFrame):
+        return data_frame.set_index("No")
+
+    def change_date_format(data_frame: pandas.DataFrame) -> pandas.DataFrame:
+        data_frame.loc[:, "発表日"] = pandas.to_datetime(
+            ['2022年' + _ for _ in data_frame['発表日'].to_list()], format='%Y年%m月%d日')
+        return data_frame
+
+    if not is_debug:
+        pdf_read = PyPDF2.PdfFileReader(pdf_file_path)
+        num_page = pdf_read.numPages
+        if num_page > 10:
+            page_list = list(range(10, num_page, 10))
+        else:
+            page_list = [num_page]
+
+        init = 1
         dfs = []
-        for table in tbls:
-            df = table.df
-            dfs.append(df)
-        df_all = pandas.concat(dfs)
-        dfs_lap.append(df_all)
-    df_total = pandas.concat(dfs_lap)
-    print(f"{time.time()-time1:.2f}")
+        for end_id in page_list:
+            if end_id == page_list[-1]:
+                end_id = "end"
+            tbls = camelot.read_pdf(pdf_file_path, pages=f'{init}-{end_id}')
+            if end_id != "end":
+                init = end_id + 1
 
-    df_all = copy.deepcopy(df_total)
+            for table in tbls:
+                df = table.df
+                dfs.append(df)
+        # for debug
+        with open("list_data.pickle", "wb") as f:
+            pickle.dump(dfs, f)
+    else:
+        with open("list_data.pickle", "rb") as f:
+            dfs = pickle.load(f)
 
-    df_all.columns = df_all.iloc[0, :]
-    df_all = df_all.sort_values("No")
-    df_all = df_all[df_all["No"] != "No"]
-    df_all = df_all.set_index("No")
-
-    exceptions3 = [index for index, _date in zip(
-        df_all.index, df_all["年代・性別"]) if "削除" in _date]
-    exceptions2 = [index for index, _date in zip(
-        df_all.index, df_all["発表日"]) if "欠番" in _date]
-    exceptions = [index for index in df_all.index if "陽性者公表数の修正" in index]
-    exceptions += exceptions2 + exceptions3
-    df_all = df_all.drop(exceptions, axis=0)
-
-    # 10歳未満バグを回避
-    for no in df_all[df_all["発表日"] == ""].index:
-        df_all.at[no, "発表日"], df_all.at[no,
-                                        "年代・性別"] = df_all.at[no, "年代・性別"].split()
-    for index in df_all[df_all["年代・性別"] == ""].index.to_list():
-        if len(happyoubi := df_all.loc[index, "発表日"].split("\n")) == 5:
-            happyoubi.insert(2, "")
-        else:
-            add_number = 6 - len(happyoubi)
-            happyoubi += [""] * add_number
-        df_all.loc[index, :] = happyoubi
-
-    df_all["発表日"] = pandas.to_datetime(
-        ['2022年' + _ if "取り下げ" not in _ else None for _ in df_all['発表日']], format='%Y年%m月%d日')
-    # df_all = df_all.set_index("No")
-    df_all = df_all[df_all.notnull()["発表日"]]
-    try:
-        assert ValueError
-    except ValueError:
-        # for -202011
-        df202011 = copy.deepcopy(df_all.iloc[:10128, :])
-        for i in range(len(df202011)):
-            if df202011.iloc[i, 1] == '':
-                no, date = df202011.iloc[i, 0].split()
-                df202011.iloc[i, 1] = date.replace("※", '')
-                df202011.iloc[i, 0] = no
-        df202011['発表日'] = pandas.to_datetime(
-            ['2020年' + _ for _ in df202011['発表日']], format='%Y年%m月%d日')
-
-        df202011['No'] = [int(_) for _ in df202011["No"]]
-        df202011 = df202011.sort_values("No")
-        # df_all = df202011.set_index("No")
-
-    corrected_city = list()
-    for city in df_all["住居地"].to_list():
-        if city == "⻑久⼿市":
-            corrected_city.append("長久手市")
-        elif (city == "⻄尾市"):
-            corrected_city.append("西尾市")
-        elif (city == "瀬⼾市"):
-            corrected_city.append("瀬戸市")
-        elif (city == "愛⻄市"):
-            corrected_city.append("愛西市")
-        else:
-            corrected_city.append(city)
-    df_all["住居地"] = corrected_city
-    zip_name = f"{os.path.splitext(pdf_file_path)[0]}.zip"
-
-    # cope with （確認中）
-    residences = []
-    for age, nationality, note, resid in zip(df_all["年代・性別"], df_all["国籍"], df_all["備考"], df_all["住居地"]):
-        if ("確認中" in age) & (("名古屋市" in nationality) or ("名古屋市" in str(note))):
-            residences.append("名古屋市")
-        # cope with 一宮市空欄問題
-        elif (resid == "") & ("一宮市発表" in note):
-            residences.append("一宮市")
-        else:
-            residences.append(resid)
-    df_all["住居地"] = residences
-
-    df_all.to_pickle(zip_name)
+    df = pandas.DataFrame()
+    for df_tmp in dfs:
+        df_tmp = set_columns_by_first_row(df_tmp)
+        df_tmp = set_new_columns_for_pending_nagoya(df_tmp)
+        df_tmp = refine_date(df_tmp)
+        df_tmp = set_city_when_city_is_blank(df_tmp)
+        df_tmp = set_index(df_tmp)
+        df_tmp = change_date_format(df_tmp)
+        df_tmp = city_name_correction(df_tmp)
+        df = pandas.concat([df, df_tmp])
+    zip_name = "data_list.zip"
+    df.to_pickle(zip_name)
     return zip_name
 
 
@@ -181,10 +179,10 @@ def populate_sheet(pandas_zip_file):
 
 
 def write_numbers_to_spreadsheet(data):
-    url = "https://script.google.com/macros/s/AKfycbwfgSEXCRsAB5wRyaoYeRX9YD0RM7MDJarITKOFiJ9Vs5pbUQ4s1rQXVgaqNZsQkSNI/exec"
+    from config import spreadsheet_url2
     headers = {"Content-Type": "application/json"}
     json_data = json.dumps({"data": data})
-    requests.post(url, json_data, headers=headers)
+    requests.post(spreadsheet_url2, json_data, headers=headers)
 
 
 def generate_list_for_spreadsheet(date, df0):
@@ -196,6 +194,7 @@ def get_yesterday_number():
     import re
     from datetime import datetime, timedelta, timezone
     posts = get_posts()
+
     for post in posts:
 
         date = datetime.strptime(
@@ -212,16 +211,17 @@ def get_yesterday_number():
     # compile then match
     repatter = re.compile(pattern)
     result = repatter.match(post["text"])
-
-    return int(result.group(1))
+    if (number := int(result.group(1))) > 1000:
+        return number
+    else:
+        return 20000
 
 
 def main():
     pdf = download_today_data()
     yesterday_number = get_yesterday_number() * 1.65
     pdf2 = cut_pdf(yesterday_number, pdf)
-    # pdf2 = cut_pdf(13000, pdf)
-    zip_name = generate_df_from_aichi(pdf2)
+    zip_name = generate_df_from_aichi(pdf2, is_debug=True)
     df0 = populate_sheet(zip_name)
     yesterday = datetime.today().astimezone(
         timezone(timedelta(hours=9))) - timedelta(days=1)
