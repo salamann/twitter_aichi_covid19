@@ -33,8 +33,6 @@ def download_today_data():
 def cut_pdf(number, pdf_name, page_plus=0):
     from math import ceil
     page = ceil(number / 47) + 1 + page_plus
-
-    import PyPDF2
     merger = PyPDF2.PdfFileMerger()
 
     merger.append(pdf_name, pages=PyPDF2.pagerange.PageRange(f'{-page}:'))
@@ -47,7 +45,7 @@ def cut_pdf(number, pdf_name, page_plus=0):
 def generate_df_from_aichi(pdf_file_path):
     print(f"generating {pdf_file_path}")
 
-    pdf_read = PyPDF2.PdfFileReader(pdf_file_path)
+    pdf_read = PyPDF2.PdfFileReader(pdf_file_path, strict=False)
     num_page = pdf_read.numPages
 
     if num_page > 10:
@@ -102,8 +100,9 @@ def generate_df_from_aichi(pdf_file_path):
         df_all.loc[index, :] = happyoubi
 
     df_all["発表日"] = pandas.to_datetime(
-        ['2021年' + _ for _ in df_all['発表日']], format='%Y年%m月%d日')
+        ['2022年' + _ if "取り下げ" not in _ else None for _ in df_all['発表日']], format='%Y年%m月%d日')
     # df_all = df_all.set_index("No")
+    df_all = df_all[df_all.notnull()["発表日"]]
     try:
         assert ValueError
     except ValueError:
@@ -135,6 +134,19 @@ def generate_df_from_aichi(pdf_file_path):
             corrected_city.append(city)
     df_all["住居地"] = corrected_city
     zip_name = f"{os.path.splitext(pdf_file_path)[0]}.zip"
+
+    # cope with （確認中）
+    residences = []
+    for age, nationality, note, resid in zip(df_all["年代・性別"], df_all["国籍"], df_all["備考"], df_all["住居地"]):
+        if ("確認中" in age) & (("名古屋市" in nationality) or ("名古屋市" in str(note))):
+            residences.append("名古屋市")
+        # cope with 一宮市空欄問題
+        elif (resid == "") & ("一宮市発表" in note):
+            residences.append("一宮市")
+        else:
+            residences.append(resid)
+    df_all["住居地"] = residences
+
     df_all.to_pickle(zip_name)
     return zip_name
 
@@ -149,14 +161,17 @@ def populate_sheet(pandas_zip_file):
     res = {city: [] for city in cities.split()}
     for day in sorted(list(set(df.index.to_list()))):
         num_outside = 0
-        for key in (counts := Counter(df.loc[day, :]["住居地"])):
+        _data_day = df.loc[day, "住居地"]
+        if isinstance(_data_day, str):
+            _data_day = {_data_day: 1}
+        for key in (counts := Counter(_data_day)):
             if key in res.keys():
                 res[key].append(counts[key])
             else:
                 num_outside += counts[key]
         res[list(res.keys())[-1]].append(num_outside)
     #             res[list(res.keys())[-1]].append(counts[key])
-        size = len(res["名古屋市"])
+        size = max([len(_) for _ in res.values()])
         for city in res.keys():
             if len(res[city]) < size:
                 res[city].append(0)
@@ -203,8 +218,9 @@ def get_yesterday_number():
 
 def main():
     pdf = download_today_data()
-    yesterday_number = get_yesterday_number()
-    pdf2 = cut_pdf(yesterday_number + 200, pdf)
+    yesterday_number = get_yesterday_number() * 1.65
+    pdf2 = cut_pdf(yesterday_number, pdf)
+    # pdf2 = cut_pdf(13000, pdf)
     zip_name = generate_df_from_aichi(pdf2)
     df0 = populate_sheet(zip_name)
     yesterday = datetime.today().astimezone(

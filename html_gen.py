@@ -16,7 +16,7 @@ cities = {'北名古屋市': "kitanagoya", '名古屋市': "nagoya", '一宮市'
           '半田市': "handa", '春日井市': "kasugai", '豊川市': "toyokawa", '津島市': "tsushima",
           '碧南市': "hekinan", '刈谷市': "kariya", '安城市': "anjo", '西尾市': "nishio", '蒲郡市': "gamagori",
           '犬山市': "inuyama", '常滑市': "tokoname", '江南市': "konan", '小牧市': "komaki", '稲沢市': "inazawa",
-          '新城市': "anjo", '東海市': "tokai", '大府市': "obu", '知多市': "chita", '知立市': "chiryu",
+          '新城市': "shinshiro", '東海市': "tokai", '大府市': "obu", '知多市': "chita", '知立市': "chiryu",
           '尾張旭市': "owariasahi", '高浜市': "takahama", '岩倉市': "iwakura", '豊明市': "toyoake", '日進市': "nisshin",
           '田原市': "tawara", '愛西市': "aisai", '清須市': "kiyosu",
           '弥富市': "yatomi", 'みよし市': "miyoshi", 'あま市': "ama", '長久手市': "nagakute", '東郷町': "togo",
@@ -147,6 +147,7 @@ def generate_plots(data):
 def upload_file_with_ftp_over_ssl():
     yesterday = (datetime.today() - timedelta(days=1)).date().__str__()
     for _path in Path("html").glob("*"):
+        # if 1:
         if ("2021" not in _path.name) or (yesterday in _path.name):
             local_path = "html/" + _path.name
             print("uploading..\t", local_path)

@@ -347,20 +347,20 @@ def update_database():
 
 if __name__ == "__main__":
 
-    # try:
     from update_spreadsheet import main
     main()
     from html_gen import html_main
     html_main()
-    # ranking_today()
     ranking_today2()
     ranking_week2()
     ranking_week_area2()
+    rt_post()
+
+    # ranking_today()
     # except:
     #     pass
     # update_database()
     # ranking_week()
-    rt_post()
 
     # ranking_today2()
     # print(ranking_week2())

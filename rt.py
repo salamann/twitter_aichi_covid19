@@ -28,7 +28,7 @@ def calculate_rt(df: pandas.DataFrame):
     rts = {"days": [], "rt": []}
     for day in df.index[:-7]:
         rt = (df.loc[day, "numbers"] / df.loc[day -
-                                              timedelta(days=7), "numbers"])**(5 / 7)
+                                              timedelta(days=7), "numbers"])**(2 / 7)
         rts["days"].append(day)
         rts["rt"].append(rt)
     return pandas.DataFrame(rts).set_index("days")
@@ -80,7 +80,8 @@ def generate_rt_image_and_message():
     (https://www.pref.aichi.jp/site/covid19-aichi/)
 実効再生産数の計算方法：Real-time estimation of the effective reproduction number of COVID-19 in Japan 
     (https://github.com/contactmodel/COVID19-Japan-Reff)
-平均世代時間は5日、報告間隔は7日と仮定
+平均世代時間は2日、報告間隔は7日と仮定:Estimating Generation Time Of Omicron 
+    (http://sonorouschocolate.com/covid19/index.php?title=Estimating_Generation_Time_Of_Omicron)
 """,
              fontsize=5, verticalalignment="bottom", horizontalalignment="left", rotation=90)
     # print(y_position, ylims)
@@ -102,6 +103,10 @@ def rt_post():
 
 
 if __name__ == "__main__":
-    generate_rt_image_and_message()
+    # plt.plot(generate_rts()["愛知県全体"])
+    # plt.grid()
+    # plt.ylim([0.8, 2.0])
+    # plt.show()
+    # generate_rt_image_and_message()
     # rt_post()
     pass
