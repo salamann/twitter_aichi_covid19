@@ -19,10 +19,10 @@ def download_today_data():
     soup = BeautifulSoup(html.content, "html.parser")
     for p in soup.find_all("p"):
         if "愛知県内の感染者の発生事例" in p.text:
-            try:
-                pdf_url = p.next_sibling()[0]["href"]
-            except KeyError:
-                pdf_url = p.find("a").attrs["href"]
+            # try:
+            #     pdf_url = p.next_sibling()[0]["href"]
+            # except KeyError:
+            pdf_url = p.find("a").attrs["href"]
 
     pdf_url = urljoin(os.path.dirname(os.path.dirname(load_url)), pdf_url)
     pdf_name = str(datetime.today()).split()[
@@ -102,10 +102,25 @@ def generate_df_from_aichi(pdf_file_path: str, is_debug=False) -> pandas.DataFra
     def set_index(data_frame: pandas.DataFrame):
         return data_frame.set_index("No")
 
+    def cope_with_less_than_10y(data_frame: pandas.DataFrame) -> pandas.DataFrame:
+        new_age = []
+        new_date = []
+        for _date, _age in zip(data_frame["発表日"], data_frame["年代・性別"]):
+            if "日" == _date:
+                _date, _age = _age.split()
+            new_age.append(_age)
+            new_date.append(_date)
+        data_frame.loc[:, "発表日"] = new_date
+        data_frame.loc[:, "年代・性別"] = new_age
+        return data_frame
+
     def change_date_format(data_frame: pandas.DataFrame) -> pandas.DataFrame:
         data_frame.loc[:, "発表日"] = pandas.to_datetime(
             ['2022年' + _ for _ in data_frame['発表日'].to_list()], format='%Y年%m月%d日')
         return data_frame
+
+    def remove_ketsuban(data_frame: pandas.DataFrame) -> pandas.DataFrame:
+        return data_frame[~data_frame["発表日"].str.contains("欠番")]
 
     if not is_debug:
         pdf_read = PyPDF2.PdfFileReader(pdf_file_path)
@@ -141,6 +156,8 @@ def generate_df_from_aichi(pdf_file_path: str, is_debug=False) -> pandas.DataFra
         df_tmp = refine_date(df_tmp)
         df_tmp = set_city_when_city_is_blank(df_tmp)
         df_tmp = set_index(df_tmp)
+        df_tmp = cope_with_less_than_10y(df_tmp)
+        df_tmp = remove_ketsuban(df_tmp)
         df_tmp = change_date_format(df_tmp)
         df_tmp = city_name_correction(df_tmp)
         df = pandas.concat([df, df_tmp])
@@ -221,7 +238,9 @@ def main():
     pdf = download_today_data()
     yesterday_number = get_yesterday_number() * 1.65
     pdf2 = cut_pdf(yesterday_number, pdf)
-    zip_name = generate_df_from_aichi(pdf2, is_debug=True)
+    # pdf2 = cut_pdf(15000, pdf)
+    zip_name = generate_df_from_aichi(pdf2)
+    # zip_name = generate_df_from_aichi(pdf2, is_debug=True)
     df0 = populate_sheet(zip_name)
     yesterday = datetime.today().astimezone(
         timezone(timedelta(hours=9))) - timedelta(days=1)
