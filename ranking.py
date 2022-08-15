@@ -83,7 +83,7 @@ def ranking_week2():
         df1.index = [indices[num]]
         df = pandas.concat([df, df1])
 
-    for city, num in df.loc[yesterday].loc[yesterday].sort_values(ascending=False).to_dict().items():
+    for city, num in df.loc[yesterday].sort_values(ascending=False).to_dict().items():
         if current_num == num:
             is_same = True
         else:
@@ -112,7 +112,7 @@ def ranking_week_area2():
     data = create_df_per_capita(get_speadsheet_data())
 
     yesterday = str((datetime.today() - timedelta(days=1)).date())
-    today_data = data.loc[yesterday].loc[yesterday].sort_values(
+    today_data = data.loc[yesterday].sort_values(
         ascending=False)
 
     ranking_text = "愛知県新型コロナ危険エリアランキング（昨日まで直近1週間の10万人あたり新型コロナウイルス感染者数）\n"

@@ -228,7 +228,9 @@ def get_yesterday_number():
     # compile then match
     repatter = re.compile(pattern)
     result = repatter.match(post["text"])
-    if (number := int(result.group(1))) > 1000:
+    if result is None:
+        return 20000
+    elif (number := int(result.group(1))) > 1000:
         return number
     else:
         return 20000
@@ -238,12 +240,15 @@ def main():
     pdf = download_today_data()
     yesterday_number = get_yesterday_number() * 1.65
     pdf2 = cut_pdf(yesterday_number, pdf)
-    # pdf2 = cut_pdf(15000, pdf)
+    # pdf2 = cut_pdf(50000, pdf)
     zip_name = generate_df_from_aichi(pdf2)
     # zip_name = generate_df_from_aichi(pdf2, is_debug=True)
     df0 = populate_sheet(zip_name)
+    # df0 = populate_sheet("data_list.zip")
     yesterday = datetime.today().astimezone(
         timezone(timedelta(hours=9))) - timedelta(days=1)
+    # write_numbers_to_spreadsheet(
+    #     generate_list_for_spreadsheet("2022-04-13", df0))
     write_numbers_to_spreadsheet(
         generate_list_for_spreadsheet(str(yesterday.date()), df0))
 

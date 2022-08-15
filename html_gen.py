@@ -234,7 +234,8 @@ def create_df_per_capita(data):
         indices.append(date)
         date = date.date().__str__()
 
-        infected_people = df.loc[date].loc[date].to_dict()
+        infected_people = df.loc[date, :].to_dict()
+        # infected_people = df.loc[date].loc[date].to_dict()
 
         for city, num_infection in infected_people.items():
             if city != "県外":

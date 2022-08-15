@@ -20,7 +20,7 @@ def generate_risk_map():
     df2["city"] = ["名古屋市" if n03 == "名古屋市" else n04 for n03,
                    n04 in zip(df2.N03_003, df2.N03_004)]
     yesterday = str((datetime.today() - timedelta(days=1)).date())
-    today_data = data.loc[yesterday].loc[yesterday]
+    today_data = data.loc[yesterday]
     df2["covid_number_per_capita"] = [today_data[city]
                                       if city != "所属未定地" else None for city in df2["city"]]
     df2.plot(column="covid_number_per_capita", legend=True,
