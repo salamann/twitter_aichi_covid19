@@ -1,16 +1,17 @@
-import pandas
-from collections import Counter
-import PyPDF2
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-from urllib.request import urlretrieve
 import os
-from datetime import datetime, timedelta, timezone
-import camelot
 import json
 from math import ceil
 import pickle
+from collections import Counter
+import requests
+from urllib.parse import urljoin
+from urllib.request import urlretrieve
+from datetime import datetime, timedelta, timezone
+
+import pandas
+import PyPDF2
+import camelot
+from bs4 import BeautifulSoup
 
 
 def download_today_data():

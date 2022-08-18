@@ -1,10 +1,12 @@
+import os
+from datetime import datetime, timedelta, timezone
+
 import pandas
 import matplotlib.pyplot as plt
 import matplotlib
-import os
+
 from twitter_post import image_post
 from utility import get_speadsheet_data
-from datetime import datetime, timedelta, timezone
 
 
 def get_city_num(data, city):

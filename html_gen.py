@@ -1,15 +1,14 @@
-#!/usr/bin/env python
-# coding: utf-8
+import shutil
+from ftplib import FTP_TLS
+from pathlib import Path
+from datetime import datetime, timedelta
 
 from jinja2 import Environment, FileSystemLoader
 import matplotlib.pyplot as plt
-from ftplib import FTP_TLS
-from pathlib import Path
 import pandas
 import requests
-from datetime import datetime, timedelta
+
 from config import spreadsheet_url, password, host_name, user_name
-import shutil
 
 cities = {'北名古屋市': "kitanagoya", '名古屋市': "nagoya", '一宮市': "ichinomiya", '豊橋市': "toyohashi",
           '豊田市': "toyota", '岡崎市': "okazaki", '瀬戸市': "seto",
