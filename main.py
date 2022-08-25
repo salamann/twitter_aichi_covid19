@@ -349,12 +349,18 @@ def get_toyohashi_info(engine_number=1):
     if result is not None:
         today_number = int(result.group(1))
     else:
-        pattern = r'.*?新規陽性者数：(\d+)件'
+        pattern = r'.*?者数：(\d+)件'
 
         # compile then match
         repatter = re.compile(pattern)
         result = repatter.match(text_line_text)
-        today_number = int(result.group(1))
+        if result is not None:
+            today_number = int(result.group(1))
+        else:
+            pattern = r'.*?者数：(\d+),(\d+)件'
+            repatter = re.compile(pattern)
+            result = repatter.match(text_line_text)
+            today_number = int(result.group(1) + result.group(2))
 
     return {"is_today": is_today, "is_yesterday": is_yesterday, "number": today_number, "url": detailed_url}
 
