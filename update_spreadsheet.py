@@ -12,6 +12,8 @@ import pandas
 import PyPDF2
 import camelot
 from bs4 import BeautifulSoup
+from tqdm import tqdm
+import feedparser
 
 
 def download_today_data():
@@ -151,7 +153,7 @@ def generate_df_from_aichi(pdf_file_path: str, is_debug=False) -> pandas.DataFra
             dfs = pickle.load(f)
 
     df = pandas.DataFrame()
-    for df_tmp in dfs:
+    for df_tmp in tqdm(dfs):
         df_tmp = set_columns_by_first_row(df_tmp)
         df_tmp = set_new_columns_for_pending_nagoya(df_tmp)
         df_tmp = refine_date(df_tmp)
@@ -237,21 +239,59 @@ def get_yesterday_number():
         return 20000
 
 
+def download_pdf_of_the_day():
+    today = datetime.today().astimezone(
+        timezone(timedelta(hours=9))) - timedelta(hours=6)
+
+    d_atom = feedparser.parse(
+        'https://www.pref.aichi.jp/rss/10/site-758.xml')
+
+    titles = ['新型コロナウイルス感染症患者の発生について',
+              "新型コロナウイルス感染者の発生について"]
+
+    is_today = False
+    article_url = None
+    for entry in d_atom['entries']:
+        _day = datetime.strptime(
+            entry['updated'], "%Y-%m-%dT%H:%M:%S+09:00") - timedelta(hours=6)
+        if _day.date() == today.date() and (entry['title'] in titles):
+            article_url = entry['id']
+            is_today = True
+            break
+    if is_today:
+        html = requests.get(article_url)
+        soup = BeautifulSoup(html.content, "lxml")
+        a = soup.find(class_="detail_free").find('a')
+        if '新型コロナウイルス感染者' in a.text:
+            pdf_filename = f"{str(datetime.today().date())}.pdf"
+            pdf_url = urljoin('https://www.pref.aichi.jp/', a.attrs['href'])
+            urlretrieve(pdf_url, pdf_filename)
+    return pdf_filename
+
+
+def parse_pdf(pdf_filename):
+    tbls = camelot.read_pdf(pdf_filename, pages=f'1')
+
+    df1 = tbls[1].df.loc[1:, :]
+    title_indices = [_index for _index in range(
+        len(df1.columns)) if _index % 2 == 0]
+    number_indices = [_index for _index in range(
+        len(df1.columns)) if _index % 2 == 1]
+
+    data = {}
+    for title_index, number_index in zip(title_indices, number_indices):
+        data |= {_title: int(_number.replace(',', '')) for _title, _number in zip(
+            df1.loc[:, title_index].to_list(), df1.loc[:, number_index].to_list()) if _number != ''}
+    data.pop('県内合計')
+    cities = "名古屋市	一宮市	豊橋市	豊田市	岡崎市	瀬戸市	半田市	春日井市	豊川市	津島市	碧南市	刈谷市	安城市	西尾市	蒲郡市	犬山市	常滑市	江南市	小牧市	稲沢市	新城市	東海市	大府市	知多市	知立市	尾張旭市	高浜市	岩倉市	豊明市	日進市	田原市	愛西市	清須市	北名古屋市	弥富市	みよし市	あま市	長久手市	東郷町	豊山町	大口町	扶桑町	大治町	蟹江町	飛島村	阿久比町	東浦町	南知多町	美浜町	武豊町	幸田町	設楽町	東栄町	豊根村"
+    return [str(datetime.today().date())]+[data[city]
+                                           for city in cities.split()] + [0]
+
+
 def main():
-    pdf = download_today_data()
-    yesterday_number = get_yesterday_number() * 1.65
-    pdf2 = cut_pdf(yesterday_number, pdf)
-    # pdf2 = cut_pdf(50000, pdf)
-    zip_name = generate_df_from_aichi(pdf2)
-    # zip_name = generate_df_from_aichi(pdf2, is_debug=True)
-    df0 = populate_sheet(zip_name)
-    # df0 = populate_sheet("data_list.zip")
-    yesterday = datetime.today().astimezone(
-        timezone(timedelta(hours=9))) - timedelta(days=1)
-    # write_numbers_to_spreadsheet(
-    #     generate_list_for_spreadsheet("2022-04-13", df0))
-    write_numbers_to_spreadsheet(
-        generate_list_for_spreadsheet(str(yesterday.date()), df0))
+    pdf_filename = download_pdf_of_the_day()
+    today_data = parse_pdf(pdf_filename)
+    write_numbers_to_spreadsheet(today_data)
 
 
 if __name__ == "__main__":

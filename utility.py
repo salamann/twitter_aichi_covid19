@@ -7,7 +7,7 @@ import re
 import pandas
 
 
-def get_speadsheet_data():
+def get_spreadsheet_data():
     import pandas
     import requests
 
