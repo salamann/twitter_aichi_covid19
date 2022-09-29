@@ -33,7 +33,7 @@ def generate_risk_map():
     plt.gca().spines['top'].set_visible(False)
     plt.gca().spines['left'].set_visible(False)
     plt.gca().spines['bottom'].set_visible(False)
-    plt.suptitle(f"""昨日まで直近1週間の10万人あたり新型コロナウイルス感染者数
+    plt.suptitle(f"""今日まで直近1週間の10万人あたり新型コロナウイルス感染者数
 ({str(datetime.today().date())}現在)"""
                  )
     plt.text(plt.gca().get_xlim()[0] - 0.2,

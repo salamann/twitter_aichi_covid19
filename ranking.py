@@ -31,10 +31,10 @@ def count_twitter(text):
 def ranking_today():
     df = get_spreadsheet_data()
     rank = 0
-    ranking = "昨日の新型コロナウイルス感染者数ランキング\n"
+    ranking = "今日の新型コロナウイルス感染者数ランキング\n"
     is_same = False
     current_num = -1
-    yesterday = str((datetime.today() - timedelta(days=1)).date())
+    yesterday = str((datetime.today() - timedelta(days=0)).date())
 
     for city, num in df.loc[yesterday].sort_values(ascending=False).to_dict().items():
         if current_num == num:
@@ -64,10 +64,10 @@ def ranking_today():
 def ranking_week():
     data = get_spreadsheet_data()
     rank = 0
-    ranking = "昨日まで直近1週間の新型コロナウイルス感染者数ランキング\n"
+    ranking = "今日まで直近1週間の新型コロナウイルス感染者数ランキング\n"
     is_same = False
     current_num = -1
-    yesterday = str((datetime.today() - timedelta(days=1)).date())
+    yesterday = str((datetime.today() - timedelta(days=0)).date())
 
     df = pandas.DataFrame([])
     indices = data.index.sort_values(ascending=False)
@@ -104,11 +104,11 @@ def ranking_week():
 def ranking_week_area():
     data = create_df_per_capita(get_spreadsheet_data())
 
-    yesterday = str((datetime.today() - timedelta(days=1)).date())
+    yesterday = str((datetime.today() - timedelta(days=0)).date())
     today_data = data.loc[yesterday].sort_values(
         ascending=False)
 
-    ranking_text = "愛知県新型コロナ危険エリアランキング（昨日まで直近1週間の10万人あたり新型コロナウイルス感染者数）\n"
+    ranking_text = "愛知県新型コロナ危険エリアランキング（今日まで直近1週間の10万人あたり新型コロナウイルス感染者数）\n"
     rank = 0
     num_prior = 0
     for city, num in today_data.items():
@@ -135,8 +135,8 @@ def ranking_week_area():
 
 if __name__ == "__main__":
 
-    from update_spreadsheet import main
-    main()
+    # from update_spreadsheet import main
+    # main()
     from html_gen import html_main
     html_main()
     ranking_today()
