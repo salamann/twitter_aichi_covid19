@@ -14,6 +14,7 @@ import camelot
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 import feedparser
+from utility import get_spreadsheet_data
 
 
 def download_today_data():
@@ -239,9 +240,9 @@ def get_yesterday_number():
         return 20000
 
 
-def download_pdf_of_the_day():
+def status_data_of_the_day(days_before=0):
     today = datetime.today().astimezone(
-        timezone(timedelta(hours=9))) - timedelta(hours=6)
+        timezone(timedelta(hours=9))) - timedelta(hours=6) - timedelta(days=days_before)
 
     d_atom = feedparser.parse(
         'https://www.pref.aichi.jp/rss/10/site-758.xml')
@@ -258,19 +259,35 @@ def download_pdf_of_the_day():
             article_url = entry['id']
             is_today = True
             break
-    if is_today:
-        html = requests.get(article_url)
+    return {"date": today, "is_available": is_today, "url": article_url}
+
+
+def is_data_already_of_the_day(days_before=0):
+    today = datetime.today().astimezone(
+        timezone(timedelta(hours=9))) - timedelta(hours=6) - timedelta(days=days_before)
+    spreadsheet_data = get_spreadsheet_data()
+    return str(today.date()) in [str(date.date()) for date in spreadsheet_data.index]
+
+
+def download_pdf_of_the_day(days_before=0):
+    status = status_data_of_the_day(days_before=days_before)
+    is_already = is_data_already_of_the_day(days_before=days_before)
+
+    if (status["is_available"]) & (not is_already):
+        html = requests.get(status["url"])
         soup = BeautifulSoup(html.content, "lxml")
         a = soup.find(class_="detail_free").find('a')
         if '新型コロナウイルス感染者' in a.text:
-            pdf_filename = f"{str(datetime.today().date())}.pdf"
+            pdf_filename = f"{str(status['date'].date())}.pdf"
             pdf_url = urljoin('https://www.pref.aichi.jp/', a.attrs['href'])
             urlretrieve(pdf_url, pdf_filename)
-    return pdf_filename
+        return pdf_filename
+    else:
+        return None
 
 
 def parse_pdf(pdf_filename):
-    tbls = camelot.read_pdf(pdf_filename, pages=f'1')
+    tbls = camelot.read_pdf(pdf_filename, pages='1')
 
     df1 = tbls[1].df.loc[1:, :]
     title_indices = [_index for _index in range(
@@ -290,8 +307,12 @@ def parse_pdf(pdf_filename):
 
 def main():
     pdf_filename = download_pdf_of_the_day()
-    today_data = parse_pdf(pdf_filename)
-    write_numbers_to_spreadsheet(today_data)
+    if pdf_filename is not None:
+        today_data = parse_pdf(pdf_filename)
+        write_numbers_to_spreadsheet(today_data)
+        return True
+    else:
+        return None
 
 
 if __name__ == "__main__":

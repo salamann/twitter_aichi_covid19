@@ -90,7 +90,7 @@ def generate_rt_image_and_message():
     plt.savefig(file_name, facecolor="w", dpi=200)
     plt.close()
 
-    message = "[更新]昨日の愛知県内の実効再生産数(Rt)は、"
+    message = "[更新]今日の愛知県内の実効再生産数(Rt)は、"
     dfyesterday = nagoya.loc[nagoya.index[-1], :]
     for city, rt in zip(dfyesterday.keys(), dfyesterday.values):
         message += f"{city}は{round(rt, 2)}、"
