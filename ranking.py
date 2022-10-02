@@ -135,8 +135,8 @@ def ranking_week_area():
 
 if __name__ == "__main__":
 
-    # from update_spreadsheet import main
-    # main()
+    from update_spreadsheet import main
+    main()
     from html_gen import html_main
     html_main()
     ranking_today()
