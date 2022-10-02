@@ -281,7 +281,9 @@ def download_pdf_of_the_day(days_before=0):
             pdf_filename = f"{str(status['date'].date())}.pdf"
             pdf_url = urljoin('https://www.pref.aichi.jp/', a.attrs['href'])
             urlretrieve(pdf_url, pdf_filename)
-    return pdf_filename
+        return pdf_filename
+    else:
+        return None
 
 
 def parse_pdf(pdf_filename):
@@ -305,8 +307,12 @@ def parse_pdf(pdf_filename):
 
 def main():
     pdf_filename = download_pdf_of_the_day()
-    today_data = parse_pdf(pdf_filename)
-    write_numbers_to_spreadsheet(today_data)
+    if pdf_filename is not None:
+        today_data = parse_pdf(pdf_filename)
+        write_numbers_to_spreadsheet(today_data)
+        return True
+    else:
+        return None
 
 
 if __name__ == "__main__":

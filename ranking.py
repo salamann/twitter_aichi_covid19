@@ -1,9 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 
 import pandas
 
-from twitter_post import post, image_post
+from twitter_post import post, image_post, get_posts
 from twitter_text import parse_tweet
 from rt import rt_post
 from area_risk import image_file_name, generate_risk_map, create_df_per_capita
@@ -133,13 +133,23 @@ def ranking_week_area():
     return ranking_text
 
 
-if __name__ == "__main__":
+def is_already_posted():
+    posts = get_posts()
+    post_dates = [datetime.strptime(str(post["created_at"]), "%a %b %d %H:%M:%S %z %Y").astimezone(
+        timezone(timedelta(hours=9))) for post in posts]
+    posts_today = [post for date, post in zip(
+        post_dates, posts) if datetime.today().date() == date.date()]
+    return any(True if "ランキング" in post["text"] else False for post in posts_today)
 
-    from update_spreadsheet import main
-    main()
-    from html_gen import html_main
-    html_main()
-    ranking_today()
-    ranking_week()
-    ranking_week_area()
-    rt_post()
+
+if __name__ == "__main__":
+    if not is_already_posted():
+        from update_spreadsheet import main
+        is_data_available = main()
+        if is_data_available is not None:
+            from html_gen import html_main
+            html_main()
+            ranking_today()
+            ranking_week()
+            ranking_week_area()
+            rt_post()
