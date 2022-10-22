@@ -153,3 +153,5 @@ if __name__ == "__main__":
             ranking_week()
             ranking_week_area()
             rt_post()
+            from tweet_numbers import post_all_cities
+            post_all_cities()

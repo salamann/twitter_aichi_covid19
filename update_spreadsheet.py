@@ -297,9 +297,10 @@ def parse_pdf(pdf_filename):
 
     data = {}
     for title_index, number_index in zip(title_indices, number_indices):
-        data |= {_title: int(_number.replace(',', '')) for _title, _number in zip(
+        data |= {_title: int(_number.replace(',', '').replace("県内合計", "")) for _title, _number in zip(
             df1.loc[:, title_index].to_list(), df1.loc[:, number_index].to_list()) if _number != ''}
-    data.pop('県内合計')
+    if "県内合計" in data.keys():
+        data.pop('県内合計')
     cities = "名古屋市	一宮市	豊橋市	豊田市	岡崎市	瀬戸市	半田市	春日井市	豊川市	津島市	碧南市	刈谷市	安城市	西尾市	蒲郡市	犬山市	常滑市	江南市	小牧市	稲沢市	新城市	東海市	大府市	知多市	知立市	尾張旭市	高浜市	岩倉市	豊明市	日進市	田原市	愛西市	清須市	北名古屋市	弥富市	みよし市	あま市	長久手市	東郷町	豊山町	大口町	扶桑町	大治町	蟹江町	飛島村	阿久比町	東浦町	南知多町	美浜町	武豊町	幸田町	設楽町	東栄町	豊根村"
     return [str(datetime.today().date())] + [data[city]
                                              for city in cities.split()] + [0]
