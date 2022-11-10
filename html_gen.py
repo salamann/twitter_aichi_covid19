@@ -2,6 +2,8 @@ import shutil
 from ftplib import FTP_TLS
 from pathlib import Path
 from datetime import datetime, timedelta
+import time
+from socket import gaierror
 
 from jinja2 import Environment, FileSystemLoader
 import matplotlib.pyplot as plt
@@ -144,16 +146,31 @@ def generate_plots(data):
 
 
 def upload_file_with_ftp_over_ssl():
-    yesterday = (datetime.today() - timedelta(days=1)).date().__str__()
     for _path in Path("html").glob("*"):
-        # if 1:
-        if ("2021" not in _path.name) or (yesterday in _path.name):
+        if _path.name[0].isdigit():
+            date_file = datetime.strptime(_path.name[:10], "%Y-%m-%d")
+            is_recent_files = (
+                date_file >= datetime.today() - timedelta(days=14))
+        elif "risk_map" in _path.name:
+            date_file = datetime.strptime(
+                _path.name.replace("risk_map_", "")[:10], "%Y-%m-%d")
+            is_recent_files = (
+                date_file >= datetime.today() - timedelta(days=14))
+        else:
+            is_recent_files = True
+        if is_recent_files:
             local_path = "html/" + _path.name
             print("uploading..\t", local_path)
             remote_path = f"twitter_aichi_covid19/{local_path.split('/')[-1]}"
-            with FTP_TLS(host=host_name, user=user_name, passwd=password) as ftp:
-                with open(local_path, 'rb') as f:
-                    ftp.storbinary(f'STOR {remote_path}', f)
+            try:
+                with FTP_TLS(host=host_name, user=user_name, passwd=password) as ftp:
+                    with open(local_path, 'rb') as f:
+                        ftp.storbinary(f'STOR {remote_path}', f)
+            except gaierror:
+                time.sleep(3)
+                with FTP_TLS(host=host_name, user=user_name, passwd=password) as ftp:
+                    with open(local_path, 'rb') as f:
+                        ftp.storbinary(f'STOR {remote_path}', f)
 
 
 def generate_week_html(data):
