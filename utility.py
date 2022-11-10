@@ -5,18 +5,16 @@ from typing import Callable
 import re
 
 import pandas
+import requests
+
+from config import spreadsheet_url2
 
 
-def get_spreadsheet_data():
-    import pandas
-    import requests
-
-    from config import spreadsheet_url
-
-    response = requests.get(spreadsheet_url)
+def get_spreadsheet_data(url=spreadsheet_url2, index_name="日付"):
+    response = requests.get(url)
     dfapi = pandas.DataFrame(response.json())
-    dfapi["日付"] = pandas.to_datetime(dfapi["日付"])
-    dfapi = dfapi.set_index("日付")
+    dfapi[index_name] = pandas.to_datetime(dfapi[index_name])
+    dfapi = dfapi.set_index(index_name)
 
     dfapi.index = dfapi.index.tz_convert('Asia/Tokyo')
     return dfapi

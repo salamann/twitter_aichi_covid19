@@ -14,7 +14,10 @@ import camelot
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 import feedparser
+
 from utility import get_spreadsheet_data
+from config import spreadsheet_url2
+from config import spreadsheet_generation_url
 
 
 def download_today_data():
@@ -199,14 +202,13 @@ def populate_sheet(pandas_zip_file):
     return df0
 
 
-def write_numbers_to_spreadsheet(data):
-    from config import spreadsheet_url2
+def write_numbers_to_spreadsheet(data: list, url=spreadsheet_url2) -> None:
     headers = {"Content-Type": "application/json"}
     json_data = json.dumps({"data": data})
-    requests.post(spreadsheet_url2, json_data, headers=headers)
+    requests.post(url, json_data, headers=headers)
 
 
-def generate_list_for_spreadsheet(date, df0):
+def generate_list_for_spreadsheet(date: str, df0: pandas.DataFrame) -> list:
     return [date] + df0.loc[date].to_list()
 
 
@@ -240,7 +242,7 @@ def get_yesterday_number():
         return 20000
 
 
-def status_data_of_the_day(days_before=0):
+def status_data_of_the_day(days_before: int = 0):
     today = datetime.today().astimezone(
         timezone(timedelta(hours=9))) - timedelta(hours=6) - timedelta(days=days_before)
 
@@ -262,14 +264,14 @@ def status_data_of_the_day(days_before=0):
     return {"date": today, "is_available": is_today, "url": article_url}
 
 
-def is_data_already_of_the_day(days_before=0):
+def is_data_already_of_the_day(days_before: int = 0):
     today = datetime.today().astimezone(
         timezone(timedelta(hours=9))) - timedelta(hours=6) - timedelta(days=days_before)
     spreadsheet_data = get_spreadsheet_data()
     return str(today.date()) in [str(date.date()) for date in spreadsheet_data.index]
 
 
-def download_pdf_of_the_day(days_before=0):
+def download_pdf_of_the_day(days_before: int = 0):
     status = status_data_of_the_day(days_before=days_before)
     is_already = is_data_already_of_the_day(days_before=days_before)
 
@@ -286,7 +288,7 @@ def download_pdf_of_the_day(days_before=0):
         return None
 
 
-def parse_pdf(pdf_filename):
+def parse_pdf(pdf_filename: str) -> list:
     tbls = camelot.read_pdf(pdf_filename, pages='1')
 
     df1 = tbls[1].df.loc[1:, :]
@@ -297,19 +299,80 @@ def parse_pdf(pdf_filename):
 
     data = {}
     for title_index, number_index in zip(title_indices, number_indices):
-        data |= {_title: int(_number.replace(',', '')) for _title, _number in zip(
+        data |= {_title: int(_number.replace(',', '').replace('県内合計', '')) for _title, _number in zip(
             df1.loc[:, title_index].to_list(), df1.loc[:, number_index].to_list()) if _number != ''}
-    data.pop('県内合計')
+    if '県内合計' in data.keys():
+        data.pop('県内合計')
     cities = "名古屋市	一宮市	豊橋市	豊田市	岡崎市	瀬戸市	半田市	春日井市	豊川市	津島市	碧南市	刈谷市	安城市	西尾市	蒲郡市	犬山市	常滑市	江南市	小牧市	稲沢市	新城市	東海市	大府市	知多市	知立市	尾張旭市	高浜市	岩倉市	豊明市	日進市	田原市	愛西市	清須市	北名古屋市	弥富市	みよし市	あま市	長久手市	東郷町	豊山町	大口町	扶桑町	大治町	蟹江町	飛島村	阿久比町	東浦町	南知多町	美浜町	武豊町	幸田町	設楽町	東栄町	豊根村"
     return [str(datetime.today().date())] + [data[city]
                                              for city in cities.split()] + [0]
 
 
+def parse_data_per_age(pdf_filename: str) -> dict:
+    tbls = camelot.read_pdf(pdf_filename, pages=f'1')
+
+    df0 = tbls[0].df.loc[1:, :]
+
+    title_indices = [_index for _index in df0.index if _index % 2 == 1]
+    number_indices = [_index for _index in df0.index if _index % 2 == 0]
+
+    data = {}
+    for title_index, number_index in zip(title_indices, number_indices):
+        titles = []
+        for _item in df0.loc[title_index, :].to_list():
+            titles += _item.split()
+        numbers = []
+        for _item in df0.loc[number_index, :].to_list():
+            numbers += _item.split()
+        data |= {_title: int(_number.replace(',', '')) for _title, _number in zip(
+            titles, numbers) if _number != ''}
+    old_names = {'0歳': '10歳未満', '1～4歳': '10歳未満', '5～9歳': '10歳未満', '10～19歳': '10代', '20～29歳': '20代',
+                 '30～39歳': '30代', '40～49歳': '40代', '50～59歳': '50代', '60～64歳': '60代',
+                 '65～69歳': '60代', '70～79歳': '70代', '80～89歳': '80代', '90代': '90歳以上', '100歳以上': '90歳以上'}
+    refined_data = {}
+    for key, value in data.items():
+        if key in old_names.keys():
+            if old_names[key] not in refined_data.keys():
+                refined_data[old_names[key]] = 0
+            refined_data[old_names[key]] += value
+        else:
+            refined_data[key] = value
+    if '不明' not in data.keys():
+        refined_data['不明'] = 0
+    if '計' in refined_data.keys():
+        refined_data.pop('計')
+    if '合計' in refined_data.keys():
+        refined_data.pop('合計')
+    return refined_data
+
+
+def generate_dataframe_from_pdf(pdf_filename: str, day_before: int = 0) -> pandas.DataFrame:
+
+    res = {'date': []}
+    data = parse_data_per_age(pdf_filename)
+    res['date'].append(
+        str((datetime.today() - timedelta(days=day_before)).date()))
+    for key in data.keys():
+        if key not in res.keys():
+            res[key] = []
+    for key, value in data.items():
+        res[key].append(value)
+
+    return pandas.DataFrame(res).set_index('date')
+
+
 def main():
     pdf_filename = download_pdf_of_the_day()
     if pdf_filename is not None:
+
+        # update city-wise data
         today_data = parse_pdf(pdf_filename)
         write_numbers_to_spreadsheet(today_data)
+
+        # update generation database
+        data = generate_list_for_spreadsheet(pdf_filename.split('.')[0],
+                                             generate_dataframe_from_pdf(pdf_filename))
+        write_numbers_to_spreadsheet(data, spreadsheet_generation_url)
         return True
     else:
         return None

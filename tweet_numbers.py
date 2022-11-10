@@ -63,13 +63,6 @@ def parse_pdf():
                                            for city in cities.split()] + [0]
 
 
-def write_numbers_to_spreadsheet(data):
-    from config import spreadsheet_url2
-    headers = {"Content-Type": "application/json"}
-    json_data = json.dumps({"data": data})
-    requests.post(spreadsheet_url2, json_data, headers=headers)
-
-
 def pre_post(city: str, article_url: str) -> dict:
     today = datetime.today().astimezone(
         timezone(timedelta(hours=9))) - timedelta(hours=6)
@@ -107,8 +100,8 @@ def get_aichi_data_from_spreadsheet(day_before=0):
 
 
 def get_aichi_day_data_from_spreadsheet():
-    spreadsheet_url = config.spreadsheet_url
-    response = requests.get(spreadsheet_url)
+    spreadsheet_url2 = config.spreadsheet_url2
+    response = requests.get(spreadsheet_url2)
     dfapi = pandas.DataFrame(response.json())
     dfapi["日付"] = pandas.to_datetime(dfapi["日付"])
     dfapi = dfapi.set_index("日付")

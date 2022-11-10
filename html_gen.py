@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 from jinja2 import Environment, FileSystemLoader
 import matplotlib.pyplot as plt
 import pandas
-import requests
 
-from config import spreadsheet_url, password, host_name, user_name
+# from utility import get_spreadsheet_data
+from config import spreadsheet_url2, password, host_name, user_name
 
 cities = {'北名古屋市': "kitanagoya", '名古屋市': "nagoya", '一宮市': "ichinomiya", '豊橋市': "toyohashi",
           '豊田市': "toyota", '岡崎市': "okazaki", '瀬戸市': "seto",
@@ -26,16 +26,16 @@ cities = {'北名古屋市': "kitanagoya", '名古屋市': "nagoya", '一宮市'
           '豊根村': "toyone", '県外': "kengai"}
 
 
-def get_speadsheet_data():
+# def get_speadsheet_data():
 
-    url = spreadsheet_url
-    response = requests.get(url)
-    dfapi = pandas.DataFrame(response.json())
-    dfapi["日付"] = pandas.to_datetime(dfapi["日付"])
-    dfapi = dfapi.set_index("日付")
+#     url = spreadsheet_url2
+#     response = requests.get(url)
+#     dfapi = pandas.DataFrame(response.json())
+#     dfapi["日付"] = pandas.to_datetime(dfapi["日付"])
+#     dfapi = dfapi.set_index("日付")
 
-    dfapi.index = dfapi.index.tz_convert('Asia/Tokyo')
-    return dfapi
+#     dfapi.index = dfapi.index.tz_convert('Asia/Tokyo')
+#     return dfapi
 
 
 def generate_ranking_text_day(data, date):
