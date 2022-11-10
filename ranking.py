@@ -155,3 +155,5 @@ if __name__ == "__main__":
             rt_post()
             from tweet_numbers import post_all_cities
             post_all_cities()
+            from generation_figure import post_generation
+            post_generation()

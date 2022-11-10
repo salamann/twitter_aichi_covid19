@@ -43,7 +43,7 @@ def create_graph(df2: pandas.DataFrame) -> str:
 
 
 def create_message(df2: pandas.DataFrame) -> str:
-    message = "[更新]今日の愛知県内の世代別感染者数ランキングは、"
+    message = "[更新]今日の愛知県内の世代別感染者数(7日間移動平均)ランキングは、"
     rankings = df2.loc[str(datetime.today().date()),
                        :].sort_values(ascending=False)
     for _index, (gen_name, number) in enumerate(zip(rankings.index, rankings.to_list())):
