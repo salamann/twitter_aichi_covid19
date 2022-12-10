@@ -288,7 +288,7 @@ def download_pdf_of_the_day(days_before: int = 0):
         return None
 
 
-def parse_pdf(pdf_filename: str) -> list:
+def parse_pdf(pdf_filename: str, days_before=0) -> list:
     tbls = camelot.read_pdf(pdf_filename, pages='1')
 
     df1 = tbls[1].df.loc[1:, :]
@@ -304,7 +304,7 @@ def parse_pdf(pdf_filename: str) -> list:
     if '県内合計' in data.keys():
         data.pop('県内合計')
     cities = "名古屋市	一宮市	豊橋市	豊田市	岡崎市	瀬戸市	半田市	春日井市	豊川市	津島市	碧南市	刈谷市	安城市	西尾市	蒲郡市	犬山市	常滑市	江南市	小牧市	稲沢市	新城市	東海市	大府市	知多市	知立市	尾張旭市	高浜市	岩倉市	豊明市	日進市	田原市	愛西市	清須市	北名古屋市	弥富市	みよし市	あま市	長久手市	東郷町	豊山町	大口町	扶桑町	大治町	蟹江町	飛島村	阿久比町	東浦町	南知多町	美浜町	武豊町	幸田町	設楽町	東栄町	豊根村"
-    return [str(datetime.today().date())] + [data[city]
+    return [str((datetime.today() - timedelta(days=days_before)).date())] + [data[city]
                                              for city in cities.split()] + [0]
 
 
@@ -346,12 +346,12 @@ def parse_data_per_age(pdf_filename: str) -> dict:
     return refined_data
 
 
-def generate_dataframe_from_pdf(pdf_filename: str, day_before: int = 0) -> pandas.DataFrame:
+def generate_dataframe_from_pdf(pdf_filename: str, days_before: int = 0) -> pandas.DataFrame:
 
     res = {'date': []}
     data = parse_data_per_age(pdf_filename)
     res['date'].append(
-        str((datetime.today() - timedelta(days=day_before)).date()))
+        str((datetime.today() - timedelta(days=days_before)).date()))
     for key in data.keys():
         if key not in res.keys():
             res[key] = []
@@ -362,16 +362,17 @@ def generate_dataframe_from_pdf(pdf_filename: str, day_before: int = 0) -> panda
 
 
 def main():
-    pdf_filename = download_pdf_of_the_day()
+    days_before=0
+    pdf_filename = download_pdf_of_the_day(days_before=days_before)
     if pdf_filename is not None:
 
         # update city-wise data
-        today_data = parse_pdf(pdf_filename)
+        today_data = parse_pdf(pdf_filename, days_before=days_before)
         write_numbers_to_spreadsheet(today_data)
 
         # update generation database
         data = generate_list_for_spreadsheet(pdf_filename.split('.')[0],
-                                             generate_dataframe_from_pdf(pdf_filename))
+                                             generate_dataframe_from_pdf(pdf_filename, days_before=days_before))
         write_numbers_to_spreadsheet(data, spreadsheet_generation_url)
         return True
     else:
