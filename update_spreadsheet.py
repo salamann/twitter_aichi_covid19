@@ -18,7 +18,7 @@ import feedparser
 from utility import get_spreadsheet_data
 from config import spreadsheet_url2
 from config import spreadsheet_generation_url
-
+import sheets_api
 
 def download_today_data():
     load_url = 'https://www.pref.aichi.jp/site/covid19-aichi'
@@ -267,7 +267,7 @@ def status_data_of_the_day(days_before: int = 0):
 def is_data_already_of_the_day(days_before: int = 0):
     today = datetime.today().astimezone(
         timezone(timedelta(hours=9))) - timedelta(hours=6) - timedelta(days=days_before)
-    spreadsheet_data = get_spreadsheet_data()
+    spreadsheet_data = sheets_api.get_data()
     return str(today.date()) in [str(date.date()) for date in spreadsheet_data.index]
 
 
@@ -362,18 +362,18 @@ def generate_dataframe_from_pdf(pdf_filename: str, days_before: int = 0) -> pand
 
 
 def main():
-    days_before=0
+    days_before=1
     pdf_filename = download_pdf_of_the_day(days_before=days_before)
     if pdf_filename is not None:
 
         # update city-wise data
         today_data = parse_pdf(pdf_filename, days_before=days_before)
-        write_numbers_to_spreadsheet(today_data)
+        sheets_api.update_values(today_data, spreadsheet_name='by_city')
 
         # update generation database
         data = generate_list_for_spreadsheet(pdf_filename.split('.')[0],
                                              generate_dataframe_from_pdf(pdf_filename, days_before=days_before))
-        write_numbers_to_spreadsheet(data, spreadsheet_generation_url)
+        sheets_api.update_values(data, spreadsheet_name='by_generation')
         return True
     else:
         return None
