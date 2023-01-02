@@ -18,6 +18,7 @@ import feedparser
 from utility import get_spreadsheet_data
 from config import spreadsheet_url2
 from config import spreadsheet_generation_url
+import sheets_api
 
 
 def download_today_data():
@@ -267,7 +268,7 @@ def status_data_of_the_day(days_before: int = 0):
 def is_data_already_of_the_day(days_before: int = 0):
     today = datetime.today().astimezone(
         timezone(timedelta(hours=9))) - timedelta(hours=6) - timedelta(days=days_before)
-    spreadsheet_data = get_spreadsheet_data()
+    spreadsheet_data = sheets_api.get_data()
     return str(today.date()) in [str(date.date()) for date in spreadsheet_data.index]
 
 
@@ -288,7 +289,7 @@ def download_pdf_of_the_day(days_before: int = 0):
         return None
 
 
-def parse_pdf(pdf_filename: str) -> list:
+def parse_pdf(pdf_filename: str, days_before=0) -> list:
     tbls = camelot.read_pdf(pdf_filename, pages='1')
 
     df1 = tbls[1].df.loc[1:, :]
@@ -346,7 +347,7 @@ def parse_data_per_age(pdf_filename: str) -> dict:
     return refined_data
 
 
-def generate_dataframe_from_pdf(pdf_filename: str, day_before: int = 0) -> pandas.DataFrame:
+def generate_dataframe_from_pdf(pdf_filename: str, days_before: int = 0) -> pandas.DataFrame:
 
     res = {'date': []}
     data = parse_data_per_age(pdf_filename)
@@ -362,17 +363,18 @@ def generate_dataframe_from_pdf(pdf_filename: str, day_before: int = 0) -> panda
 
 
 def main():
-    pdf_filename = download_pdf_of_the_day()
+    days_before = 1
+    pdf_filename = download_pdf_of_the_day(days_before=days_before)
     if pdf_filename is not None:
 
         # update city-wise data
-        today_data = parse_pdf(pdf_filename)
-        write_numbers_to_spreadsheet(today_data)
+        today_data = parse_pdf(pdf_filename, days_before=days_before)
+        sheets_api.update_values(today_data, spreadsheet_name='by_city')
 
         # update generation database
         data = generate_list_for_spreadsheet(pdf_filename.split('.')[0],
-                                             generate_dataframe_from_pdf(pdf_filename))
-        write_numbers_to_spreadsheet(data, spreadsheet_generation_url)
+                                             generate_dataframe_from_pdf(pdf_filename, days_before=days_before))
+        sheets_api.update_values(data, spreadsheet_name='by_generation')
         return True
     else:
         return None
