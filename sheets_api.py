@@ -18,6 +18,7 @@ with open('settings.yaml', 'r', encoding="utf-8") as f:
     settings = yaml.safe_load(f)
     SPREADSHEET_ID = settings['SPREADSHEET_ID']
 
+
 def get_auth():
     """Shows basic usage of the Sheets API.
     Prints values from a sample spreadsheet.
@@ -41,6 +42,7 @@ def get_auth():
             token.write(creds.to_json())
     return creds
 
+
 def get_data(spreadsheet_name='by_city'):
     try:
         service = build('sheets', 'v4', credentials=get_auth())
@@ -54,10 +56,11 @@ def get_data(spreadsheet_name='by_city'):
     except HttpError as err:
         print(err)
 
-def values_to_dataframe(values : list) -> pandas.DataFrame:
+
+def values_to_dataframe(values: list) -> pandas.DataFrame:
     df = pandas.DataFrame(values)
     df = df.set_axis(df.loc[0, :], axis='columns').loc[1:, :].set_index('date')
-    df.index = df.index.astype('datetime64')
+    df.index = pandas.to_datetime(df.index)
     return df
 
 
@@ -76,7 +79,7 @@ def update_values(values, spreadsheet_name='by_city'):
             'values': [values]
         }
         result = service.spreadsheets().values().update(
-            spreadsheetId=SPREADSHEET_ID, 
+            spreadsheetId=SPREADSHEET_ID,
             range=f"{spreadsheet_name}!A{row_number}:BD{row_number}",
             valueInputOption="USER_ENTERED", body=body).execute()
         print(f"{result.get('updatedCells')} cells updated.")
@@ -85,11 +88,9 @@ def update_values(values, spreadsheet_name='by_city'):
         print(f"An error occurred: {error}")
         return error
 
+
 def get_data_as_df(creds):
     return values_to_dataframe(get_data(creds))
-
-
-
 
 
 if __name__ == '__main__':
@@ -98,6 +99,6 @@ if __name__ == '__main__':
     # df = values_to_dataframe(values)
     # update_values(creds, len(values) + 1, [['123', '234', '345']])
     # creds = get_auth()
-    # values = get_data()
+    values = get_data()
     # update_values(['123', '234', '345'], spreadsheet_name='by_generation')
     pass

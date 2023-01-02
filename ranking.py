@@ -34,7 +34,8 @@ def ranking_today():
     ranking = "今日の新型コロナウイルス感染者数ランキング\n"
     is_same = False
     current_num = -1
-    yesterday = str((datetime.today() - timedelta(days=0)).date())
+    yesterday = str(
+        (datetime.today() - timedelta(days=0) - timedelta(hours=6)).date())
 
     for city, num in df.loc[yesterday].sort_values(ascending=False).to_dict().items():
         if current_num == num:
@@ -67,7 +68,8 @@ def ranking_week():
     ranking = "今日まで直近1週間の新型コロナウイルス感染者数ランキング\n"
     is_same = False
     current_num = -1
-    yesterday = str((datetime.today() - timedelta(days=0)).date())
+    yesterday = str(
+        (datetime.today() - timedelta(hours=6) - timedelta(days=0)).date())
 
     df = pandas.DataFrame([])
     indices = data.index.sort_values(ascending=False)
@@ -104,7 +106,8 @@ def ranking_week():
 def ranking_week_area():
     data = create_df_per_capita(get_spreadsheet_data())
 
-    yesterday = str((datetime.today() - timedelta(days=0)).date())
+    yesterday = str(
+        (datetime.today() - timedelta(hours=6) - timedelta(days=0)).date())
     today_data = data.loc[yesterday].sort_values(
         ascending=False)
 
@@ -136,9 +139,9 @@ def ranking_week_area():
 def is_already_posted():
     posts = get_posts()
     post_dates = [datetime.strptime(str(post["created_at"]), "%a %b %d %H:%M:%S %z %Y").astimezone(
-        timezone(timedelta(hours=9))) for post in posts]
+        timezone(timedelta(hours=9))) - timedelta(hours=6) for post in posts]
     posts_today = [post for date, post in zip(
-        post_dates, posts) if datetime.today().date() == date.date()]
+        post_dates, posts) if (datetime.today() - timedelta(hours=6)).date() == date.date()]
     return any(True if "ランキング" in post["text"] else False for post in posts_today)
 
 
@@ -157,3 +160,14 @@ if __name__ == "__main__":
             post_all_cities()
             from generation_figure import post_generation
             post_generation()
+
+    # from html_gen import html_main
+    # html_main()
+    # ranking_today()
+    # ranking_week()
+    # ranking_week_area()
+    # rt_post()
+    # from tweet_numbers import post_all_cities
+    # post_all_cities()
+    # from generation_figure import post_generation
+    # post_generation()
