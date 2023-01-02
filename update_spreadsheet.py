@@ -32,7 +32,7 @@ def download_today_data():
             pdf_url = p.find("a").attrs["href"]
 
     pdf_url = urljoin(os.path.dirname(os.path.dirname(load_url)), pdf_url)
-    pdf_name = str(datetime.today()).split()[
+    pdf_name = str(datetime.today() - timedelta(hours=6)).split()[
         0].replace("-", "") + ".pdf"
     urlretrieve(pdf_url, pdf_name)
     return pdf_name
@@ -224,7 +224,7 @@ def get_yesterday_number():
             post['created_at'], "%a %b %d %H:%M:%S %z %Y") - timedelta(hours=6)
         date = date.astimezone(timezone(timedelta(hours=9)))
         yesterday = datetime.today().astimezone(
-            timezone(timedelta(hours=9))) - timedelta(days=1)
+            timezone(timedelta(hours=9))) - timedelta(days=1) - timedelta(hours=6)
         if "愛知県全体の本日の" in post["text"]:
             if date.date() == yesterday.date():
                 break
@@ -304,12 +304,12 @@ def parse_pdf(pdf_filename: str) -> list:
     if '県内合計' in data.keys():
         data.pop('県内合計')
     cities = "名古屋市	一宮市	豊橋市	豊田市	岡崎市	瀬戸市	半田市	春日井市	豊川市	津島市	碧南市	刈谷市	安城市	西尾市	蒲郡市	犬山市	常滑市	江南市	小牧市	稲沢市	新城市	東海市	大府市	知多市	知立市	尾張旭市	高浜市	岩倉市	豊明市	日進市	田原市	愛西市	清須市	北名古屋市	弥富市	みよし市	あま市	長久手市	東郷町	豊山町	大口町	扶桑町	大治町	蟹江町	飛島村	阿久比町	東浦町	南知多町	美浜町	武豊町	幸田町	設楽町	東栄町	豊根村"
-    return [str(datetime.today().date())] + [data[city]
-                                             for city in cities.split()] + [0]
+    return [str((datetime.today() - timedelta(hours=6)).date())] + [data[city]
+                                                                    for city in cities.split()] + [0]
 
 
 def parse_data_per_age(pdf_filename: str) -> dict:
-    tbls = camelot.read_pdf(pdf_filename, pages=f'1')
+    tbls = camelot.read_pdf(pdf_filename, pages='1')
 
     df0 = tbls[0].df.loc[1:, :]
 
@@ -351,7 +351,7 @@ def generate_dataframe_from_pdf(pdf_filename: str, day_before: int = 0) -> panda
     res = {'date': []}
     data = parse_data_per_age(pdf_filename)
     res['date'].append(
-        str((datetime.today() - timedelta(days=day_before)).date()))
+        str((datetime.today() - timedelta(hours=6) - timedelta(days=day_before)).date()))
     for key in data.keys():
         if key not in res.keys():
             res[key] = []
