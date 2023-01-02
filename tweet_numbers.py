@@ -3,8 +3,8 @@ from datetime import datetime, timedelta, timezone
 from time import sleep
 
 import feedparser
-import requests
-import pandas
+# import requests
+# import pandas
 from requests_oauthlib import OAuth1Session
 # import json
 import camelot
@@ -97,19 +97,20 @@ def get_one_week_before():
 
 
 def get_aichi_data_from_spreadsheet(day_before=0):
-    dfapi = get_aichi_day_data_from_spreadsheet()
+    dfapi = sheets_api.get_data()
     return dfapi.loc[str((datetime.today().astimezone(timezone(timedelta(hours=9))) - timedelta(days=day_before)).date()), :]
 
 
-def get_aichi_day_data_from_spreadsheet():
-    spreadsheet_url2 = config.spreadsheet_url2
-    response = requests.get(spreadsheet_url2)
-    dfapi = pandas.DataFrame(response.json())
-    dfapi["日付"] = pandas.to_datetime(dfapi["日付"])
-    dfapi = dfapi.set_index("日付")
+# def get_aichi_day_data_from_spreadsheet():
+#     # spreadsheet_url2 = config.spreadsheet_url2
+#     # response = requests.get(spreadsheet_url2)
+#     # dfapi = pandas.DataFrame(response.json())
+#     dfapi = pandas.DataFrame(sheets_api.get_data())
+#     # dfapi["日付"] = pandas.to_datetime(dfapi["date"])
+#     # dfapi = dfapi.set_index("date")
 
-    dfapi.index = dfapi.index.tz_convert('Asia/Tokyo')
-    return dfapi
+#     # dfapi.index = dfapi.index.tz_convert('Asia/Tokyo')
+#     return dfapi
 
 
 def get_day_of_week_jp(dt):

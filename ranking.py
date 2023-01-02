@@ -37,7 +37,7 @@ def ranking_today():
     is_same = False
     current_num = -1
     yesterday = str(
-        (datetime.today() - timedelta(days=0) - timedelta(hours=6)).date())
+        (datetime.today() - timedelta(days=0, hours=6)).date())
 
     for city, num in df.loc[yesterday].sort_values(ascending=False).to_dict().items():
         if current_num == num:
@@ -72,7 +72,7 @@ def ranking_week():
     is_same = False
     current_num = -1
     yesterday = str(
-        (datetime.today() - timedelta(hours=6) - timedelta(days=0)).date())
+        (datetime.today() - timedelta(days=0, hours=6)).date())
 
     df = pandas.DataFrame([])
     indices = data.index.sort_values(ascending=False)
@@ -111,7 +111,7 @@ def ranking_week_area():
     data = create_df_per_capita(sheets_api.get_data())
 
     yesterday = str(
-        (datetime.today() - timedelta(hours=6) - timedelta(days=0)).date())
+        (datetime.today() - timedelta(days=0, hours=6)).date())
     today_data = data.loc[yesterday].sort_values(
         ascending=False)
 
@@ -164,6 +164,10 @@ if __name__ == "__main__":
             post_all_cities()
             from generation_figure import post_generation
             post_generation()
+        else:
+            print(f"{str(datetime.today())}: data is not available so far")
+    else:
+        print(f"{str(datetime.today())}: tweets are already posted")
 
     # from html_gen import html_main
     # html_main()

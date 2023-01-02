@@ -61,6 +61,7 @@ def values_to_dataframe(values: list) -> pandas.DataFrame:
     df = pandas.DataFrame(values)
     df = df.set_axis(df.loc[0, :], axis='columns').loc[1:, :].set_index('date')
     df.index = pandas.to_datetime(df.index)
+    df = df.astype(int)
     return df
 
 
@@ -72,7 +73,7 @@ def update_values(values, spreadsheet_name='by_city'):
     for guides on implementing OAuth2 for the application.
         """
     try:
-        row_number = len(get_data(spreadsheet_name=spreadsheet_name)) + 1
+        row_number = len(get_data(spreadsheet_name=spreadsheet_name)) + 2
 
         service = build('sheets', 'v4', credentials=get_auth())
         body = {

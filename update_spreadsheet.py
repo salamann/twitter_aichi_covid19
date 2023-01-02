@@ -24,7 +24,7 @@ import sheets_api
 def download_today_data():
     load_url = 'https://www.pref.aichi.jp/site/covid19-aichi'
     html = requests.get(load_url)
-    soup = BeautifulSoup(html.content, "html.parser")
+    soup = BeautifulSoup(html.content, "lxml")
     for p in soup.find_all("p"):
         if "愛知県内の感染者の発生事例" in p.text:
             # try:
@@ -225,7 +225,7 @@ def get_yesterday_number():
             post['created_at'], "%a %b %d %H:%M:%S %z %Y") - timedelta(hours=6)
         date = date.astimezone(timezone(timedelta(hours=9)))
         yesterday = datetime.today().astimezone(
-            timezone(timedelta(hours=9))) - timedelta(days=1) - timedelta(hours=6)
+            timezone(timedelta(hours=9))) - timedelta(days=1, hours=6)
         if "愛知県全体の本日の" in post["text"]:
             if date.date() == yesterday.date():
                 break
@@ -245,7 +245,7 @@ def get_yesterday_number():
 
 def status_data_of_the_day(days_before: int = 0):
     today = datetime.today().astimezone(
-        timezone(timedelta(hours=9))) - timedelta(hours=6) - timedelta(days=days_before)
+        timezone(timedelta(hours=9))) - timedelta(days=days_before, hours=6)
 
     d_atom = feedparser.parse(
         'https://www.pref.aichi.jp/rss/10/site-758.xml')
@@ -267,7 +267,7 @@ def status_data_of_the_day(days_before: int = 0):
 
 def is_data_already_of_the_day(days_before: int = 0):
     today = datetime.today().astimezone(
-        timezone(timedelta(hours=9))) - timedelta(hours=6) - timedelta(days=days_before)
+        timezone(timedelta(hours=9))) - timedelta(days=days_before, hours=6)
     spreadsheet_data = sheets_api.get_data()
     return str(today.date()) in [str(date.date()) for date in spreadsheet_data.index]
 
@@ -305,8 +305,8 @@ def parse_pdf(pdf_filename: str, days_before=0) -> list:
     if '県内合計' in data.keys():
         data.pop('県内合計')
     cities = "名古屋市	一宮市	豊橋市	豊田市	岡崎市	瀬戸市	半田市	春日井市	豊川市	津島市	碧南市	刈谷市	安城市	西尾市	蒲郡市	犬山市	常滑市	江南市	小牧市	稲沢市	新城市	東海市	大府市	知多市	知立市	尾張旭市	高浜市	岩倉市	豊明市	日進市	田原市	愛西市	清須市	北名古屋市	弥富市	みよし市	あま市	長久手市	東郷町	豊山町	大口町	扶桑町	大治町	蟹江町	飛島村	阿久比町	東浦町	南知多町	美浜町	武豊町	幸田町	設楽町	東栄町	豊根村"
-    return [str((datetime.today() - timedelta(hours=6)).date())] + [data[city]
-                                                                    for city in cities.split()] + [0]
+    return [str((datetime.today() - timedelta(days=days_before, hours=6)).date())] + [data[city]
+                                                                                      for city in cities.split()] + [0]
 
 
 def parse_data_per_age(pdf_filename: str) -> dict:
@@ -352,7 +352,7 @@ def generate_dataframe_from_pdf(pdf_filename: str, days_before: int = 0) -> pand
     res = {'date': []}
     data = parse_data_per_age(pdf_filename)
     res['date'].append(
-        str((datetime.today() - timedelta(hours=6) - timedelta(days=day_before)).date()))
+        str((datetime.today() - timedelta(days=days_before, hours=6)).date()))
     for key in data.keys():
         if key not in res.keys():
             res[key] = []
@@ -363,7 +363,7 @@ def generate_dataframe_from_pdf(pdf_filename: str, days_before: int = 0) -> pand
 
 
 def main():
-    days_before = 1
+    days_before = 0
     pdf_filename = download_pdf_of_the_day(days_before=days_before)
     if pdf_filename is not None:
 

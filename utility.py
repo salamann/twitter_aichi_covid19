@@ -102,7 +102,7 @@ def convert_zenkaku(text):
 
 def get_last_numbers_from_posts(posts, day_before=0):
     today_date = (datetime.today().astimezone(
-        timezone(timedelta(hours=9))) - timedelta(hours=6) - timedelta(days=day_before)).date()
+        timezone(timedelta(hours=9))) - timedelta(days=day_before, hours=6)).date()
     cities = ["名古屋市", "豊田市", "豊橋市", "岡崎市", "一宮市",
               "愛知県管轄自治体（名古屋市・豊橋市・豊田市・岡崎市・一宮市を除く愛知県）"]
     res = {city: -1 for city in cities}
