@@ -5,8 +5,9 @@ import geopandas
 import matplotlib
 import matplotlib.pyplot as plt
 
-from utility import get_spreadsheet_data
+# from utility import get_spreadsheet_data
 from html_gen import create_df_per_capita
+import sheets_api
 
 matplotlib.rc('font', family='Noto Sans CJK JP')
 
@@ -15,7 +16,8 @@ image_file_name = os.path.join("data", "risk_map_" + str(datetime.today().date()
 
 
 def generate_risk_map():
-    data = create_df_per_capita(get_spreadsheet_data())
+    # data = create_df_per_capita(get_spreadsheet_data())
+    data = create_df_per_capita(sheets_api.get_data())
 
     df2 = geopandas.read_file(os.path.join("shapes", "N03-19_23_190101.shp"))
 

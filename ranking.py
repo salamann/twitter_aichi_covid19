@@ -7,7 +7,8 @@ from twitter_post import post, image_post, get_posts
 from twitter_text import parse_tweet
 from rt import rt_post
 from area_risk import image_file_name, generate_risk_map, create_df_per_capita
-from utility import get_spreadsheet_data
+# from utility import get_spreadsheet_data
+import sheets_api
 
 
 def multi_dirname(path, n):
@@ -29,7 +30,8 @@ def count_twitter(text):
 
 
 def ranking_today():
-    df = get_spreadsheet_data()
+    # df = get_spreadsheet_data()
+    df = sheets_api.get_data()
     rank = 0
     ranking = "今日の新型コロナウイルス感染者数ランキング\n"
     is_same = False
@@ -63,7 +65,8 @@ def ranking_today():
 
 
 def ranking_week():
-    data = get_spreadsheet_data()
+    # data = get_spreadsheet_data()
+    data = sheets_api.get_data()
     rank = 0
     ranking = "今日まで直近1週間の新型コロナウイルス感染者数ランキング\n"
     is_same = False
@@ -104,7 +107,8 @@ def ranking_week():
 
 
 def ranking_week_area():
-    data = create_df_per_capita(get_spreadsheet_data())
+    # data = create_df_per_capita(get_spreadsheet_data())
+    data = create_df_per_capita(sheets_api.get_data())
 
     yesterday = str(
         (datetime.today() - timedelta(hours=6) - timedelta(days=0)).date())

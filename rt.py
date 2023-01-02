@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 from twitter_post import image_post
-from utility import get_spreadsheet_data
+# from utility import get_spreadsheet_data
+import sheets_api
 
 
 def get_city_num(data, city):
@@ -37,7 +38,8 @@ def calculate_rt(df: pandas.DataFrame):
 
 
 def generate_rts():
-    data = get_spreadsheet_data()
+    # data = get_spreadsheet_data()
+    data = sheets_api.get_data()
     cities = ["名古屋市", "豊田市", "豊橋市", "岡崎市", "一宮市", "愛知県全体"]
 
     df6 = pandas.DataFrame()

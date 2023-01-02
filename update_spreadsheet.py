@@ -15,9 +15,9 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 import feedparser
 
-from utility import get_spreadsheet_data
+# from utility import get_spreadsheet_data
 from config import spreadsheet_url2
-from config import spreadsheet_generation_url
+# from config import spreadsheet_generation_url
 import sheets_api
 
 

@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import pandas
 
 # from utility import get_spreadsheet_data
-from config import spreadsheet_url2, password, host_name, user_name
+from config import password, host_name, user_name
+import sheets_api
 
 cities = {'北名古屋市': "kitanagoya", '名古屋市': "nagoya", '一宮市': "ichinomiya", '豊橋市': "toyohashi",
           '豊田市': "toyota", '岡崎市': "okazaki", '瀬戸市': "seto",
@@ -294,7 +295,8 @@ def generate_area_html(df_per_capita):
 
 
 def html_main():
-    data = get_speadsheet_data()
+    # data = get_spreadsheet_data()
+    data = sheets_api.get_data()
     generate_city_htmls(data)
     generate_date_html(data)
     generate_week_html(data)

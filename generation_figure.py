@@ -5,10 +5,10 @@ import pandas
 import matplotlib
 import matplotlib.pyplot as plt
 
-from utility import get_spreadsheet_data
-from config import spreadsheet_generation_url
+# from utility import get_spreadsheet_data
+# from config import spreadsheet_generation_url
 from twitter_post import image_post
-
+import sheets_api
 
 matplotlib.rc('font', family='Noto Sans CJK JP')
 
@@ -60,8 +60,9 @@ def create_message(df2: pandas.DataFrame) -> str:
 
 def post_generation() -> None:
 
-    data = get_spreadsheet_data(
-        url=spreadsheet_generation_url, index_name='date')
+    # data = get_spreadsheet_data(
+    #     url=spreadsheet_generation_url, index_name='date')
+    data = sheets_api.get_data(spreadsheet_name="by_generation")
     df2 = create_week_average(data)
     file_name = create_graph(df2)
     message = create_message(df2)

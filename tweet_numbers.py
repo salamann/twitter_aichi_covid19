@@ -6,13 +6,15 @@ import feedparser
 import requests
 import pandas
 from requests_oauthlib import OAuth1Session
-import json
+# import json
 import camelot
 
-from utility import get_spreadsheet_data
+# from utility import get_spreadsheet_data
 import config
+import sheets_api
 
-spreadsheet_data = get_spreadsheet_data()
+# spreadsheet_data = get_spreadsheet_data()
+spreadsheet_data = sheets_api.get_data()
 
 
 def get_url():
@@ -45,7 +47,7 @@ def get_url():
 
 
 def parse_pdf():
-    tbls = camelot.read_pdf(f"{str(datetime.today().date())}.pdf", pages=f'1')
+    tbls = camelot.read_pdf(f"{str(datetime.today().date())}.pdf", pages='1')
 
     df1 = tbls[1].df.loc[1:, :]
     title_indices = [_index for _index in range(
