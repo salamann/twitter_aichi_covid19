@@ -14,7 +14,7 @@ import config
 import sheets_api
 
 # spreadsheet_data = get_spreadsheet_data()
-spreadsheet_data = sheets_api.get_data()
+spreadsheet_data = sheets_api.get_data_as_df()
 
 
 def get_url():
@@ -97,7 +97,7 @@ def get_one_week_before():
 
 
 def get_aichi_data_from_spreadsheet(day_before=0):
-    dfapi = sheets_api.get_data()
+    dfapi = sheets_api.get_data_as_df()
     return dfapi.loc[str((datetime.today().astimezone(timezone(timedelta(hours=9))) - timedelta(days=day_before)).date()), :]
 
 

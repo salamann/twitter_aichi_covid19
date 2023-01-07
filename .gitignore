@@ -134,6 +134,7 @@ dmypy.json
 354699.csv
 pops.xlsx
 .vscode/settings.json
+2020*.zip
 2021*.zip
 checked.txt
 rt.ipynb
@@ -155,6 +156,7 @@ html/*
 .vscode/*
 2021*.pdf
 2022*.pdf
+2023*.pdf
 *tmp*.xlsx
 20220714.xlsx
 20211016.xlsx
@@ -169,7 +171,6 @@ html5.py
 html3.py
 data_list.zip
 12tmp-2279-2281.zip
-2020*.zip
 database.zip
 df_vac.zip
 427990.pdf
@@ -184,7 +185,8 @@ vaccination.py
 post_number_cloud.py
 cron.py
 settings.yaml
-2023*.pdf
 token.json
 credentials.json
 log.txt
+base.html
+error.html

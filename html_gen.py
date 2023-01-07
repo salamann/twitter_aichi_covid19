@@ -296,7 +296,7 @@ def generate_area_html(df_per_capita):
 
 def html_main():
     # data = get_spreadsheet_data()
-    data = sheets_api.get_data()
+    data = sheets_api.get_data_as_df()
     generate_city_htmls(data)
     generate_date_html(data)
     generate_week_html(data)

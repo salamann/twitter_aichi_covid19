@@ -39,7 +39,7 @@ def calculate_rt(df: pandas.DataFrame):
 
 def generate_rts():
     # data = get_spreadsheet_data()
-    data = sheets_api.get_data()
+    data = sheets_api.get_data_as_df()
     cities = ["名古屋市", "豊田市", "豊橋市", "岡崎市", "一宮市", "愛知県全体"]
 
     df6 = pandas.DataFrame()

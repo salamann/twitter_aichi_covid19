@@ -17,7 +17,7 @@ image_file_name = os.path.join("data", "risk_map_" + str(datetime.today().date()
 
 def generate_risk_map():
     # data = create_df_per_capita(get_spreadsheet_data())
-    data = create_df_per_capita(sheets_api.get_data())
+    data = create_df_per_capita(sheets_api.get_data_as_df())
 
     df2 = geopandas.read_file(os.path.join("shapes", "N03-19_23_190101.shp"))
 

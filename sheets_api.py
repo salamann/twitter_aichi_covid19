@@ -43,18 +43,8 @@ def get_auth():
     return creds
 
 
-def get_data(spreadsheet_name='by_city'):
-    try:
-        service = build('sheets', 'v4', credentials=get_auth())
-
-        # Call the Sheets API
-        sheet = service.spreadsheets()
-        result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
-                                    range=f'{spreadsheet_name}!A:BD').execute()
-        return values_to_dataframe(result.get('values', []))
-
-    except HttpError as err:
-        print(err)
+def get_data_as_df(spreadsheet_name='by_city') -> pandas.DataFrame:
+    return values_to_dataframe(get_data(spreadsheet_name=spreadsheet_name))
 
 
 def values_to_dataframe(values: list) -> pandas.DataFrame:
@@ -65,7 +55,7 @@ def values_to_dataframe(values: list) -> pandas.DataFrame:
     return df
 
 
-def update_values(values, spreadsheet_name='by_city'):
+def update_values(values: list, spreadsheet_name='by_city'):
     """
     Creates the batch_update the user has access to.
     Load pre-authorized user credentials from the environment.
@@ -73,7 +63,7 @@ def update_values(values, spreadsheet_name='by_city'):
     for guides on implementing OAuth2 for the application.
         """
     try:
-        row_number = len(get_data(spreadsheet_name=spreadsheet_name)) + 2
+        row_number = len(get_data_as_df(spreadsheet_name=spreadsheet_name)) + 2
 
         service = build('sheets', 'v4', credentials=get_auth())
         body = {
@@ -90,8 +80,19 @@ def update_values(values, spreadsheet_name='by_city'):
         return error
 
 
-def get_data_as_df(creds):
-    return values_to_dataframe(get_data(creds))
+def get_data(spreadsheet_name='by_city') -> list:
+    try:
+        service = build('sheets', 'v4', credentials=get_auth())
+
+        # Call the Sheets API
+        sheet = service.spreadsheets()
+        result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
+                                    range=f'{spreadsheet_name}!A:BD').execute()
+        return result.get('values', [])
+
+    except HttpError as err:
+        print(err)
+    # return values_to_dataframe(get_data_as_df(creds))
 
 
 if __name__ == '__main__':
@@ -100,6 +101,6 @@ if __name__ == '__main__':
     # df = values_to_dataframe(values)
     # update_values(creds, len(values) + 1, [['123', '234', '345']])
     # creds = get_auth()
-    values = get_data()
+    values = get_data_as_df()
     # update_values(['123', '234', '345'], spreadsheet_name='by_generation')
     pass

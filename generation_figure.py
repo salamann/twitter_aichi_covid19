@@ -62,7 +62,7 @@ def post_generation() -> None:
 
     # data = get_spreadsheet_data(
     #     url=spreadsheet_generation_url, index_name='date')
-    data = sheets_api.get_data(spreadsheet_name="by_generation")
+    data = sheets_api.get_data_as_df(spreadsheet_name="by_generation")
     df2 = create_week_average(data)
     file_name = create_graph(df2)
     message = create_message(df2)

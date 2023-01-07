@@ -268,7 +268,7 @@ def status_data_of_the_day(days_before: int = 0):
 def is_data_already_of_the_day(days_before: int = 0):
     today = datetime.today().astimezone(
         timezone(timedelta(hours=9))) - timedelta(days=days_before, hours=6)
-    spreadsheet_data = sheets_api.get_data()
+    spreadsheet_data = sheets_api.get_data_as_df()
     return str(today.date()) in [str(date.date()) for date in spreadsheet_data.index]
 
 

@@ -31,7 +31,7 @@ def count_twitter(text):
 
 def ranking_today():
     # df = get_spreadsheet_data()
-    df = sheets_api.get_data()
+    df = sheets_api.get_data_as_df()
     rank = 0
     ranking = "今日の新型コロナウイルス感染者数ランキング\n"
     is_same = False
@@ -66,7 +66,7 @@ def ranking_today():
 
 def ranking_week():
     # data = get_spreadsheet_data()
-    data = sheets_api.get_data()
+    data = sheets_api.get_data_as_df()
     rank = 0
     ranking = "今日まで直近1週間の新型コロナウイルス感染者数ランキング\n"
     is_same = False
@@ -108,7 +108,7 @@ def ranking_week():
 
 def ranking_week_area():
     # data = create_df_per_capita(get_spreadsheet_data())
-    data = create_df_per_capita(sheets_api.get_data())
+    data = create_df_per_capita(sheets_api.get_data_as_df())
 
     yesterday = str(
         (datetime.today() - timedelta(days=0, hours=6)).date())
