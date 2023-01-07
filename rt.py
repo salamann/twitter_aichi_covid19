@@ -13,7 +13,7 @@ import sheets_api
 def get_city_num(data, city):
     span = 30
     data_city = {"days": [], "numbers": []}
-    for days_before in range(1, span + 1):
+    for days_before in range(0, span + 1):
         day = (datetime.today() - timedelta(days=days_before)
                ).astimezone(timezone(timedelta(hours=9)))
         day_before_week = (datetime.today(
@@ -49,27 +49,27 @@ def generate_rts():
 
 
 def generate_rt_image_and_message():
-    nagoya = generate_rts()
+    cities_data = generate_rts()
     plt.rcParams['figure.subplot.bottom'] = 0.18
     matplotlib.rc('font', family='Noto Sans CJK JP')
     markers = ["o", ">", "<", "^", "s", "*"]
-    for city, marker in zip(nagoya.keys(), markers):
+    for city, marker in zip(cities_data.keys(), markers):
         if city in ["愛知県全体", "名古屋市"]:
             linewidth = 2
             marker_size = 4
         else:
             linewidth = 1
             marker_size = 2
-        plt.plot(nagoya.index, nagoya[city],
+        plt.plot(cities_data.index, cities_data[city],
                  label=city, ls="-", marker=marker, ms=marker_size, lw=linewidth)
 
-    plt.plot([nagoya.index[0], nagoya.index[-1]], [1, 1], "k--")
-    plt.xlim(nagoya.index[0], nagoya.index[-1])
+    plt.plot([cities_data.index[0], cities_data.index[-1]], [1, 1], "k--")
+    plt.xlim(cities_data.index[0], cities_data.index[-1])
     plt.grid(ls=":")
     plt.legend(loc="upper left")
     plt.ylabel("Rt")
     plt.yticks(fontsize="small")
-    plt.xticks(nagoya.index, rotation=45, fontsize="small", ha="right")
+    plt.xticks(cities_data.index, rotation=45, fontsize="small", ha="right")
     plt.suptitle(
         f"""愛知県の実効再生産数(Rt)の推移
 (主要市および県全体, {str(datetime.today().date())}現在)""", )
@@ -93,7 +93,7 @@ def generate_rt_image_and_message():
     plt.close()
 
     message = "[更新]今日の愛知県内の実効再生産数(Rt)は、"
-    dfyesterday = nagoya.loc[nagoya.index[-1], :]
+    dfyesterday = cities_data.loc[cities_data.index[-1], :]
     for city, rt in zip(dfyesterday.keys(), dfyesterday.values):
         message += f"{city}は{round(rt, 2)}、"
     message = message[:-1]
@@ -111,6 +111,6 @@ if __name__ == "__main__":
     # plt.grid()
     # plt.ylim([0.8, 2.0])
     # plt.show()
-    # generate_rt_image_and_message()
+    generate_rt_image_and_message()
     # rt_post()
     pass
